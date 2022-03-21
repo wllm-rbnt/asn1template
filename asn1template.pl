@@ -69,7 +69,7 @@ sub parse_file($$) {
 
             push(@{$ptr}, $type);
             if($type eq 'BIT STRING') {
-				my $tmp_filename = tmpnam();
+                my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
                 open(FD, "od -t x1 $tmp_filename | cut -d ' ' -s -f 2- | tr -d '\n' | sed -e 's/ //g' | tr a-z A-Z |");
                 $data = <FD>;
@@ -77,7 +77,7 @@ sub parse_file($$) {
                 close(FD);
                 unlink $tmp_filename;
             } elsif ($type eq 'UTF8STRING') {
-				my $tmp_filename = tmpnam();
+                my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
                 open(FD, $tmp_filename);
                 $data = <FD>;
