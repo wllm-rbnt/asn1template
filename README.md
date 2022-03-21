@@ -8,6 +8,20 @@ order to build the equivalent DER encoded ASN1 structure.
 
 It's similar to https://github.com/google/der-ascii .
 
+It works by reading the output of the asn1parse OpenSSL app in order to build
+an internal structure that is then dumped to the ASN1_generate_nconf(3)
+compatible textual representation.
+
+The textual representation is documented in the man page of ASN1_generate_nconf(3):
+
+```bash
+$ man 3 ASN1_generate_nconf
+```
+
+This function is reachable via the ```-genconf``` option of the asn1parse
+OpenSSL app (more info in the manual page: ```man asn1parse``` or ```man openssl-asn1parse```).
+
+
 ## Example #1
 
 Take an arbitrary DER encoded certificate:
@@ -19,7 +33,7 @@ $ wget -o /dev/null https://pki.goog/repo/certs/gtsr1.der
 Convert it to an ASN1_generate_nconf(3) compatible textual description:
 
 ```bash
-$ ./asn1template.pl gtsr1.der > gtsr1.tpl 
+$ ./asn1template.pl gtsr1.der > gtsr1.tpl
 ```
 
 Convert it back to DER encoded ASN1 with ASN1_generate_nconf(3):
@@ -164,7 +178,52 @@ Finally, try to display this certificate with a CVE-2022-0778 vulnerable OpenSSL
 $ openssl x509 -inform DER -in cert_new.der -noout -text
 ```
 
+## Example #3
+
+It works on certificates, but, more generally, on arbitrary DER encoded ASN1
+blobs. Here is the same as example #1 but with a CRL file:
+
+```bash
+$ wget -o /dev/null https://crl.pki.goog/gtsr1/gtsr1.crl
+$ ./asn1template.pl gtsr1.crl > gtsr1.tpl
+$ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.crl
+$ diff gtsr1.crl gtsr1_new.crl
+$ echo $?
+0
+```
+
+Or with an smime.p7s email signature taken from https://datatracker.ietf.org/doc/html/rfc4134 (page 87):
+
+```bash
+$ cat <<EOF > smime.p7s.base64
+MIIDdwYJKoZIhvcNAQcCoIIDaDCCA2QCAQExCTAHBgUrDgMCGjALBgkqhkiG9w0BBwGgggL
+gMIIC3DCCApugAwIBAgICAMgwCQYHKoZIzjgEAzASMRAwDgYDVQQDEwdDYXJsRFNTMB4XDT
+k5MDgxNzAxMTA0OVoXDTM5MTIzMTIzNTk1OVowEzERMA8GA1UEAxMIQWxpY2VEU1MwggG2M
+IIBKwYHKoZIzjgEATCCAR4CgYEAgY3N7YPqCp45PsJIKKPkR5PdDteoDuxTxauECE//lOFz
+SH4M1vNESNH+n6+koYkv4dkwyDbeP5u/t0zcX2mK5HXQNwyRCJWb3qde+fz0ny/dQ6iLVPE
+/sAcIR01diMPDtbPjVQh11Tl2EMR4vf+dsISXN/LkURu15AmWXPN+W9sCFQDiR6YaRWa4E8
+baj7g3IStii/eTzQKBgCY40BSJMqo5+z5t2UtZakx2IzkEAjVc8ssaMMMeUF3dm1nizaoFP
+VjAe6I2uG4Hr32KQiWn9HXPSgheSz6Q+G3qnMkhijt2FOnOLl2jB80jhbgvMAF8bUmJEYk2
+RL34yJVKU1a14vlz7BphNh8Rf8K97dFQ/5h0wtGBSmA5ujY5A4GEAAKBgFzjuVp1FJYLqXr
+d4z+p7Kxe3L23ExE0phaJKBEj2TSGZ3V1ExI9Q1tv5VG/+onyohs+JH09B41bY8i7RaWgSu
+OF1s4GgD/oI34a8iSrUxq4Jw0e7wi/ZhSAXGKsZfoVi/G7NNTSljf2YUeyxDKE8H5BQP1Gp
+2NOM/Kl4vTyg+W4o4GBMH8wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCBsAwHwYDVR0j
+BBgwFoAUcEQ+gi5vh95K03XjPSC8QyuT8R8wHQYDVR0OBBYEFL5sobPjwfftQ3CkzhMB4v3
+jl/7NMB8GA1UdEQQYMBaBFEFsaWNlRFNTQGV4YW1wbGUuY29tMAkGByqGSM44BAMDMAAwLQ
+IUVQykGR9CK4lxIjONg2q1PWdrv0UCFQCfYVNSVAtcst3a53Yd4hBSW0NevTFjMGECAQEwG
+DASMRAwDgYDVQQDEwdDYXJsRFNTAgIAyDAHBgUrDgMCGjAJBgcqhkjOOAQDBC4wLAIUM/mG
+f6gkgp9Z0XtRdGimJeB/BxUCFGFFJqwYRt1WYcIOQoGiaowqGzVI
+EOF
+$ base64 -d - < smime.p7s.base64 > smime.p7s
+$ ./asn1template.pl smime.p7s > smime.p7s.tpl
+$ openssl asn1parse -genconf smime.p7s.tpl -noout -out smime.p7s_new
+$ diff smime.p7s smime.p7s_new
+$ echo $?
+0
+```
+
 ## Limitations
+
 This tool has the same limitations as ASN1_generate_nconf(3). For instance, it
 does not support indefinite length encoding.
 This crappy script was written many years ago as a quick and dirty PoC.
