@@ -2,24 +2,27 @@
 
 ## Description
 
-This tool takes a DER encoded ASN1 structure and outputs the equivalent textual
-description that can be modified and later be fed to ASN1_generate_nconf(3) in
-order to build the equivalent DER encoded ASN1 structure.
+This tool takes a DER or PEM encoded ASN1 structure and outputs the equivalent
+textual description that can be modified and later be fed to
+ASN1_generate_nconf(3) in order to build the equivalent DER encoded ASN1
+structure.
 
 It's similar to https://github.com/google/der-ascii .
 
 It works by reading the output of the asn1parse OpenSSL app in order to build
-an internal structure that is then dumped to the ASN1_generate_nconf(3)
-compatible textual representation.
+an internal structure that is then dumped to the equivalent
+ASN1_generate_nconf(3) compatible textual representation.
 
-The textual representation is documented in the man page of ASN1_generate_nconf(3):
+The syntax of this textual representation is documented in the man page of
+ASN1_generate_nconf(3):
 
 ```bash
 $ man 3 ASN1_generate_nconf
 ```
 
 This function is reachable via the ```-genconf``` option of the asn1parse
-OpenSSL app (more info in the manual page: ```man asn1parse``` or ```man openssl-asn1parse```).
+OpenSSL app (more info in the manual page: ```man asn1parse``` or ```man
+openssl-asn1parse```).
 
 
 ## Example #1
@@ -222,9 +225,41 @@ $ echo $?
 0
 ```
 
+## Example #4
+
+It also works with PEM input files:
+
+```bash
+$ wget -o /dev/null https://pki.goog/repo/certs/gtsr1.pem
+```
+
+Convert it to an ASN1_generate_nconf(3) compatible textual description:
+
+```bash
+$ ./asn1template.pl gtsr1.pem > gtsr1.tpl
+```
+
+Convert it back to DER encoded ASN1 with ASN1_generate_nconf(3):
+
+```bash
+$ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.der
+```
+
+Then back to PEM:
+```bash
+$ openssl x509 -inform DER -in gtsr1_new.der -outform PEM -out gtsr1_new.pem
+```
+
+Original and recreated PEM files are identical:
+```bash
+$ diff gtsr1.pem gtsr1_new.pem
+$ echo $?
+0
+```
+
 ## Limitations
 
 This tool has the same limitations as ASN1_generate_nconf(3). For instance, it
 does not support indefinite length encoding.
 This crappy script was written many years ago as a quick and dirty PoC.
-
+It does not support explicit tagging, yet ...
