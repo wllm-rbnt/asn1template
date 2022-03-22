@@ -5,6 +5,19 @@ use warnings;
 use Data::Dump qw/dump/;
 use File::Temp qw/:POSIX/;
 
+my $derfile;
+
+sub test_format($) {
+    my $srcfile = shift;
+    my $tmp_filename = tmpnam();
+    if(system("openssl asn1parse -in $srcfile -inform PEM -out $tmp_filename >/dev/null 2>&1")) {
+        unlink $tmp_filename;
+        $derfile = $srcfile;
+    } else {
+        $derfile = $tmp_filename;
+    }
+}
+
 sub parse_file($$) {
     my $srcfile = shift;
     my $ptr = shift;
@@ -171,7 +184,8 @@ sub dump_template_wrapper($) {
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
-parse_file($ARGV[0], $asn1);
+test_format($ARGV[0]);
+parse_file($derfile, $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
 
