@@ -148,7 +148,7 @@ sub dump_template_wrapper($) {
                         ${$ptr_display}[$i] =~ /\:([A-F0-9]+)/;
                         print "field$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
                     } elsif ($item eq 'INTEGER') {
-                        ${$ptr_display}[$i] =~ /^([A-F0-9]+)/;
+                        ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
                         print "field$fieldid = $item:0x$1\n";
                     } elsif ($item eq 'BOOLEAN') {
                         if(${$ptr_display}[$i] =~ /255/) {
