@@ -34,7 +34,7 @@ sub parse_file($$) {
     while(<SRCDER>) {
         chomp;
         $prev_indent_level = $indent_level;
-        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*(cont)\s*\[\s*([0-9]*)\s*\]\s*/ ) {
+        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*(cont|appl|priv)\s*\[\s*([0-9]*)\s*\]\s*/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
@@ -63,7 +63,7 @@ sub parse_file($$) {
             $ptr = ${$ptr}[0];
         }
     
-        if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont/ or $type =~ /^appl/) {
+        if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont/ or $type =~ /^appl/ or $type =~ /^priv/) {
             my $array_ref = [$ptr];
             push(@{$ptr}, $type);
             push(@{$ptr}, $array_ref);
@@ -128,10 +128,10 @@ sub dump_template_wrapper($) {
             } else {
                 $fieldid++;
     
-                if($item =~ /^SE[QT]|^cont|^appl/) {
+                if($item =~ /^SE[QT]|^cont|^appl|^priv/) {
                     $seqid++;
     
-                    $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([ac])[ontppl]+\s+([0-9]+)/;
+                    $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
     
                     if($fieldid == 1) {
                         print "asn1 = $item:seq$seqid\n";
