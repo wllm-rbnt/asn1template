@@ -78,7 +78,8 @@ sub parse_file($$) {
                 $type eq 'OCTET STRING' or
                 $type eq 'T61STRING' or
                 $type eq 'UTF8STRING' or
-                $type eq 'IA5STRING') {
+                $type eq 'IA5STRING' or
+                $type eq 'GENERALIZEDTIME') {
 
             push(@{$ptr}, $type);
             if($type eq 'BIT STRING') {
