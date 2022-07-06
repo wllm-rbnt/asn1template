@@ -3,9 +3,11 @@
 use strict;
 use warnings;
 use Data::Dump qw/dump/;
+use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
 my $derfile;
+my $error_detected = 0;
 
 sub test_format($) {
     my $srcfile = shift;
@@ -29,18 +31,14 @@ sub parse_file($$) {
     my $length = 0;
     my $type = '';
     my $data = '';
+    my $line_number = 0;
 
     open(SRCDER, "openssl asn1parse -inform DER -in $srcfile |") or die 'Open failed !';
     while(<SRCDER>) {
+        $line_number++;
         chomp;
         $prev_indent_level = $indent_level;
         if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*(cont|appl|priv)\s*\[\s*([0-9]*)\s*\]\s*/ ) {
-            $offset = int($1);
-            $indent_level = int($2);
-            $header_length = int($3);
-            $length = int($4);
-            $type = $5." ".$6;
-        } elsif( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*(appl)\s*\[\s*([0-9]*)\s*\]\s*/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
@@ -54,20 +52,20 @@ sub parse_file($$) {
             $type = $5;
             $data = $6 if defined($6);
         } else {
-            print "Error could not parse input line !\n";
-            print "\t".$_."\n";
+            print STDERR "Error could not parse input line #${line_number}!\n";
+            $error_detected = 1;
             next;
         }
 
         for(my $i = 0; $i < $prev_indent_level - $indent_level; $i++) {
             $ptr = ${$ptr}[0];
         }
-    
-        if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont/ or $type =~ /^appl/ or $type =~ /^priv/) {
+
+        if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont|^appl|^priv/) {
             my $array_ref = [$ptr];
             push(@{$ptr}, $type);
             push(@{$ptr}, $array_ref);
-            $ptr = $array_ref;
+            $ptr = $array_ref if $length > 0;
         } elsif($type eq 'INTEGER' or
                 $type eq 'OBJECT' or
                 $type eq 'PRINTABLESTRING' or
@@ -79,6 +77,7 @@ sub parse_file($$) {
                 $type eq 'T61STRING' or
                 $type eq 'UTF8STRING' or
                 $type eq 'IA5STRING' or
+                $type eq 'BMPSTRING' or
                 $type eq 'GENERALIZEDTIME') {
 
             push(@{$ptr}, $type);
@@ -97,9 +96,16 @@ sub parse_file($$) {
                 $data = <FD>;
                 close(FD);
                 unlink $tmp_filename;
+            } elsif ($type eq 'BMPSTRING') {
+                my $tmp_filename = tmpnam();
+                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
+                open(FD, $tmp_filename);
+                $data = decode("UTF-16BE", <FD>);
+                close(FD);
+                unlink $tmp_filename;
             }
-            push(@{$ptr}, $data) if $type ne 'NULL';
-        }
+	    push(@{$ptr}, $data) if $type ne 'NULL';
+	}
     }
     close(SRCDER);
 }
@@ -145,8 +151,11 @@ sub dump_template_wrapper($) {
                     if($item eq 'NULL') {
                         print "field$fieldid = $item\n";
                     } elsif ($item eq 'OCTET STRING') {
-                        ${$ptr_display}[$i] =~ /\:([A-F0-9]+)/;
-                        print "field$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                        if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
+                            print "field$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
+			} else {
+                            print "field$fieldid = OCTETSTRING:".${$ptr_display}[$i]."\n";
+			}
                     } elsif ($item eq 'INTEGER') {
                         ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
                         print "field$fieldid = $item:0x$1\n";
@@ -159,9 +168,11 @@ sub dump_template_wrapper($) {
                     } elsif ($item eq 'BIT STRING') {
                         print "field$fieldid = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
                     } elsif ($item eq 'UTF8STRING') {
-                        print "field$fieldid = FORMAT:UTF8,"."UTF8String:\"${$ptr_display}[$i]\"\n";
-                    } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING') {
-                        print "field$fieldid = $item:\"${$ptr_display}[$i]\"\n";
+                        print "field$fieldid = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                    } elsif ($item eq 'BMPSTRING') {
+                        print "field$fieldid = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                    } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
+                        print "field$fieldid = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                     } else {
                         print "field$fieldid = $item:${$ptr_display}[$i]\n";
                     }
@@ -189,4 +200,6 @@ test_format($ARGV[0]);
 parse_file($derfile, $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
+
+exit($error_detected);
 
