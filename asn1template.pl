@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Data::Dump qw/dump/;
+#use Data::Dump qw/dump/;
 use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
@@ -86,7 +86,7 @@ sub parse_file($$) {
             if($type eq 'BIT STRING') {
                 my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
-                open(FD, "od -t x1 $tmp_filename | cut -d ' ' -s -f 2- | tr -d '\n' | sed -e 's/ //g' | tr a-z A-Z |");
+                open(FD, "od -t x1 $tmp_filename | cut -d ' ' -s -f 2- | tr -d ' \n' | tr a-z A-Z |");
                 $data = <FD>;
                 $data = $data =~ /^00(.*)/ ? $1 : $data;
                 close(FD);
