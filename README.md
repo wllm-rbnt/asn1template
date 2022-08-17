@@ -42,7 +42,8 @@ This tool has the same limitations as ASN1_generate_nconf(3):
  - it does not support indefinite length encoding
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
-   forbidden characters such as *, @, & or _ (https://en.wikipedia.org/wiki/PrintableString).
+   forbidden characters such as ```*```, ```@```, ```&``` or ```_```
+   (https://en.wikipedia.org/wiki/PrintableString).
 
 It will not output explicit tags as is, instead it will output a combination of
 implicit tags and sequences that will ultimately produce and equivalent output.

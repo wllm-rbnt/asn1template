@@ -104,8 +104,8 @@ sub parse_file($$) {
                 close(FD);
                 unlink $tmp_filename;
             }
-	    push(@{$ptr}, $data) if $type ne 'NULL';
-	}
+            push(@{$ptr}, $data) if $type ne 'NULL';
+        }
     }
     close(SRCDER);
 }
@@ -128,7 +128,7 @@ sub dump_template_wrapper($) {
         my $length = scalar @{$ptr_display};
         my $queue = [];
         for(my $i = 1; $i < $length; $i++) {
-            my $item =${$ptr_display}[$i];
+            my $item = ${$ptr_display}[$i];
             if(ref $item eq 'ARRAY') {
                 push(@{$queue}, $item);
                 push(@{$queue}, $seqid);
@@ -140,8 +140,8 @@ sub dump_template_wrapper($) {
     
                     $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
     
-                    if($fieldid == 1) {
-                        print "asn1 = $item:seq$seqid\n";
+                    if($seqid == 0) {
+                        print "asn1 = $item:seq\@$seqid\n";
                     } else {
                         print "field$fieldid = $item:seq$seqid\n";
                     }
@@ -152,10 +152,10 @@ sub dump_template_wrapper($) {
                         print "field$fieldid = $item\n";
                     } elsif ($item eq 'OCTET STRING') {
                         if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
-                            print "field$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
-			} else {
-                            print "field$fieldid = OCTETSTRING:".${$ptr_display}[$i]."\n";
-			}
+                            print "field\@$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                        } else {
+                            print "field\@$fieldid = OCTETSTRING:".${$ptr_display}[$i]."\n";
+                        }
                     } elsif ($item eq 'INTEGER') {
                         ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
                         print "field$fieldid = $item:0x$1\n";
