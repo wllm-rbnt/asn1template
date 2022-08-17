@@ -64,6 +64,7 @@ sub parse_file($$) {
         if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont|^appl|^priv/) {
             my $array_ref = [$ptr];
             push(@{$ptr}, $type);
+            push(@{$ptr}, $offset);
             push(@{$ptr}, $array_ref);
             $ptr = $array_ref if $length > 0;
         } elsif($type eq 'INTEGER' or
@@ -81,6 +82,7 @@ sub parse_file($$) {
                 $type eq 'GENERALIZEDTIME') {
 
             push(@{$ptr}, $type);
+            push(@{$ptr}, $offset);
             if($type eq 'BIT STRING') {
                 my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
@@ -133,23 +135,24 @@ sub dump_template_wrapper($) {
                 push(@{$queue}, $item);
                 push(@{$queue}, $seqid);
             } else {
-                $fieldid++;
+                $i++;
+                $fieldid = ${$ptr_display}[$i];
     
                 if($item =~ /^SE[QT]|^cont|^appl|^priv/) {
-                    $seqid++;
+                    $seqid = ${$ptr_display}[$i];
     
                     $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
     
                     if($seqid == 0) {
                         print "asn1 = $item:seq\@$seqid\n";
                     } else {
-                        print "field$fieldid = $item:seq$seqid\n";
+                        print "field\@$fieldid = $item:seq\@$seqid\n";
                     }
                 } else {
                     $i++;
     
                     if($item eq 'NULL') {
-                        print "field$fieldid = $item\n";
+                        print "field\@$fieldid = $item\n";
                     } elsif ($item eq 'OCTET STRING') {
                         if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
                             print "field\@$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
@@ -158,23 +161,23 @@ sub dump_template_wrapper($) {
                         }
                     } elsif ($item eq 'INTEGER') {
                         ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
-                        print "field$fieldid = $item:0x$1\n";
+                        print "field\@$fieldid = $item:0x$1\n";
                     } elsif ($item eq 'BOOLEAN') {
                         if(${$ptr_display}[$i] =~ /255/) {
-                            print "field$fieldid = $item:true\n";
+                            print "field\@$fieldid = $item:true\n";
                         } else {
-                            print "field$fieldid = $item:false\n";
+                            print "field\@$fieldid = $item:false\n";
                         }
                     } elsif ($item eq 'BIT STRING') {
-                        print "field$fieldid = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
+                        print "field\@$fieldid = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
                     } elsif ($item eq 'UTF8STRING') {
-                        print "field$fieldid = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                        print "field\@$fieldid = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                     } elsif ($item eq 'BMPSTRING') {
-                        print "field$fieldid = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                        print "field\@$fieldid = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
                     } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
-                        print "field$fieldid = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                        print "field\@$fieldid = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                     } else {
-                        print "field$fieldid = $item:${$ptr_display}[$i]\n";
+                        print "field\@$fieldid = $item:${$ptr_display}[$i]\n";
                     }
                 }
             }
@@ -182,7 +185,7 @@ sub dump_template_wrapper($) {
         while (scalar @{$queue} > 0) {
             $ptr_display = shift((@{$queue}));
             my $tmpseqid = shift((@{$queue}));
-            print "[seq$tmpseqid]\n";
+            print "[seq\@$tmpseqid]\n";
             $indent_level_display++;
             dump_template();
             $indent_level_display--;
