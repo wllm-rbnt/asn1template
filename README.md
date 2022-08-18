@@ -27,10 +27,29 @@ openssl-asn1parse```).
 The tool has been tested against the test certificate corpus available at
 https://github.com/johndoe31415/x509-cert-testcorpus (~1.7M certificates).
 
+Fields and sequences naming convention is the following:
+```
+[type][id]@[offset]-[header_length]-[length]
+```
+where
+- [type] is either the string "field" or "seq",
+- [id] is a incremental numeric identifier,
+- [offset] is the offset of the object or sequence in the original encoded file,
+- [header_length] is length of the header preceding the data in the original encoded file,
+- [length] is the length of the data in the original encoded file.
+
+For instance,
+```
+seq2@3-4-567
+```
+is the second sequence. It is located at the third byte in the original
+encoded file. The header preceding the data is encoded using 4 bytes and the
+data account for 567 bytes for this sequence.
+
 
 ## Examples
 
-See EXAMPLES.md
+See [examples](EXAMPLES.md).
 
 
 ## Limitations
@@ -49,3 +68,4 @@ It will not output explicit tags as is, instead it will output a combination of
 implicit tags and sequences that will ultimately produce and equivalent output.
 Please refer to example #5 in EXAMPLES.md.
 
+SETs have not been tested yet.
