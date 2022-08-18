@@ -115,8 +115,8 @@ sub parse_file($$) {
 # Display only vars
 my $indent_level_display;
 my $ptr_display;
-my $fieldid;
-my $seqid;
+my ($fieldid, $fieldlabel);
+my ($seqid, $seqlabel);
 ####
 
 sub dump_template_wrapper($) {
@@ -133,59 +133,61 @@ sub dump_template_wrapper($) {
             my $item = ${$ptr_display}[$i];
             if(ref $item eq 'ARRAY') {
                 push(@{$queue}, $item);
-                push(@{$queue}, $seqid);
+                push(@{$queue}, "$seqid\@$seqlabel");
             } else {
                 $i++;
-                $fieldid = ${$ptr_display}[$i];
+                $fieldid++;
+                $fieldlabel = ${$ptr_display}[$i];
     
                 if($item =~ /^SE[QT]|^cont|^appl|^priv/) {
-                    $seqid = ${$ptr_display}[$i];
+                    $seqid++;
+                    $seqlabel = ${$ptr_display}[$i];
     
                     $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
     
-                    if($seqid =~ /^0-/) {
-                        print "asn1 = $item:seq\@$seqid\n";
+                    if($seqid == 1) {
+                        print "asn1 = $item:seq$seqid\@$seqlabel\n";
                     } else {
-                        print "field\@$fieldid = $item:seq\@$seqid\n";
+                        print "field$fieldid\@$fieldlabel = $item:seq$seqid\@$seqlabel\n";
                     }
                 } else {
                     $i++;
     
                     if($item eq 'NULL') {
-                        print "field\@$fieldid = $item\n";
+                        print "field$fieldid\@$fieldlabel = $item\n";
                     } elsif ($item eq 'OCTET STRING') {
                         if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
-                            print "field\@$fieldid = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                            print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
                         } else {
-                            print "field\@$fieldid = OCTETSTRING:".${$ptr_display}[$i]."\n";
+                            print "field$fieldid\@$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
                         }
                     } elsif ($item eq 'INTEGER') {
                         ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
-                        print "field\@$fieldid = $item:0x$1\n";
+                        print "field$fieldid\@$fieldlabel = $item:0x$1\n";
                     } elsif ($item eq 'BOOLEAN') {
                         if(${$ptr_display}[$i] =~ /255/) {
-                            print "field\@$fieldid = $item:true\n";
+                            print "field$fieldid\@$fieldlabel = $item:true\n";
                         } else {
-                            print "field\@$fieldid = $item:false\n";
+                            print "field$fieldid\@$fieldlabel = $item:false\n";
                         }
                     } elsif ($item eq 'BIT STRING') {
-                        print "field\@$fieldid = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
+                        print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
                     } elsif ($item eq 'UTF8STRING') {
-                        print "field\@$fieldid = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                        print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                     } elsif ($item eq 'BMPSTRING') {
-                        print "field\@$fieldid = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                        print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
                     } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
-                        print "field\@$fieldid = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                        print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                     } else {
-                        print "field\@$fieldid = $item:${$ptr_display}[$i]\n";
+                        print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
                     }
                 }
             }
         }
         while (scalar @{$queue} > 0) {
             $ptr_display = shift((@{$queue}));
-            my $tmpseqid = shift((@{$queue}));
-            print "[seq\@$tmpseqid]\n";
+            my $tmpseqref = shift((@{$queue}));
+            print "[seq$tmpseqref]\n";
             $indent_level_display++;
             dump_template();
             $indent_level_display--;
