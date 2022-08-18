@@ -64,7 +64,7 @@ sub parse_file($$) {
         if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont|^appl|^priv/) {
             my $array_ref = [$ptr];
             push(@{$ptr}, $type);
-            push(@{$ptr}, $offset);
+            push(@{$ptr}, "$offset-$header_length-$length");
             push(@{$ptr}, $array_ref);
             $ptr = $array_ref if $length > 0;
         } elsif($type eq 'INTEGER' or
@@ -82,7 +82,7 @@ sub parse_file($$) {
                 $type eq 'GENERALIZEDTIME') {
 
             push(@{$ptr}, $type);
-            push(@{$ptr}, $offset);
+            push(@{$ptr}, "$offset-$header_length-$length");
             if($type eq 'BIT STRING') {
                 my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
@@ -143,7 +143,7 @@ sub dump_template_wrapper($) {
     
                     $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
     
-                    if($seqid == 0) {
+                    if($seqid =~ /^0-/) {
                         print "asn1 = $item:seq\@$seqid\n";
                     } else {
                         print "field\@$fieldid = $item:seq\@$seqid\n";
