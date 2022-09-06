@@ -65,7 +65,7 @@ This tool has the same limitations as ASN1_generate_nconf(3):
    (https://en.wikipedia.org/wiki/PrintableString).
 
 It will not output explicit tags as is, instead it will output a combination of
-implicit tags and sequences that will ultimately produce and equivalent output.
+implicit tags and sequences that will ultimately produce an equivalent output.
 Please refer to example #5 in EXAMPLES.md.
 
 SETs have not been tested yet.
