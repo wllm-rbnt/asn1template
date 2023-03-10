@@ -95,27 +95,24 @@ sub parse_file($$) {
 
             push(@{$ptr}, $type);
             push(@{$ptr}, "$offset-$header_length-$length");
-            if($type eq 'BIT STRING') {
+
+
+            if($type eq 'BIT STRING' or
+               $type eq 'UTF8STRING' or
+               $type eq 'BMPSTRING') {
                 my $tmp_filename = tmpnam();
                 system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
                 open(FD, $tmp_filename);
-                $data = "";
-                $data .= uc unpack "H*", $_ while(<FD>);
-                $data = $data =~ /^00(.*)/ ? $1 : $data;
-                close(FD);
-                unlink $tmp_filename;
-            } elsif ($type eq 'UTF8STRING') {
-                my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
-                open(FD, $tmp_filename);
-                $data = <FD>;
-                close(FD);
-                unlink $tmp_filename;
-            } elsif ($type eq 'BMPSTRING') {
-                my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
-                open(FD, $tmp_filename);
-                $data = decode("UTF-16BE", <FD>);
+
+                if($type eq 'BIT STRING') {
+                    $data = "";
+                    $data .= uc unpack "H*", $_ while(<FD>);
+                    $data = $data =~ /^00(.*)/ ? $1 : $data;
+                } elsif ($type eq 'UTF8STRING') {
+                    $data = <FD>;
+                } elsif ($type eq 'BMPSTRING') {
+                    $data = decode("UTF-16BE", <FD>);
+                }
                 close(FD);
                 unlink $tmp_filename;
             }
