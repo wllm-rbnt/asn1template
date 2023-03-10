@@ -45,7 +45,7 @@ sub parse_file($$) {
     my $data = '';
     my $line_number = 0;
 
-    open(SRCDER, "openssl asn1parse -inform DER -in $srcfile |") or die 'Open failed !';
+    open(SRCDER, "openssl asn1parse -inform D -in $srcfile |") or die 'Open failed !';
     while(<SRCDER>) {
         $line_number++;
         chomp;
@@ -97,22 +97,23 @@ sub parse_file($$) {
             push(@{$ptr}, "$offset-$header_length-$length");
             if($type eq 'BIT STRING') {
                 my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
-                open(FD, "od -t x1 $tmp_filename | cut -d ' ' -s -f 2- | tr -d ' \n' | tr a-z A-Z |");
-                $data = <FD>;
+                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
+                open(FD, $tmp_filename);
+                $data = "";
+                $data .= uc unpack "H*", $_ while(<FD>);
                 $data = $data =~ /^00(.*)/ ? $1 : $data;
                 close(FD);
                 unlink $tmp_filename;
             } elsif ($type eq 'UTF8STRING') {
                 my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
+                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
                 open(FD, $tmp_filename);
                 $data = <FD>;
                 close(FD);
                 unlink $tmp_filename;
             } elsif ($type eq 'BMPSTRING') {
                 my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'DER', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
+                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
                 open(FD, $tmp_filename);
                 $data = decode("UTF-16BE", <FD>);
                 close(FD);
