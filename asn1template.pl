@@ -127,7 +127,7 @@ sub parse_file($$) {
 my $indent_level_display;
 my $ptr_display;
 my ($fieldid, $fieldlabel);
-my ($seqid, $seqlabel);
+my ($stype, $seqid, $seqlabel);
 ####
 
 sub dump_template_wrapper($) {
@@ -150,7 +150,8 @@ sub dump_template_wrapper($) {
                 $fieldid++;
                 $fieldlabel = ${$ptr_display}[$i];
     
-                if($item =~ /^SE[QT]|^cont|^appl|^priv/) {
+                if($item =~ /^SE([QT])|^cont|^appl|^priv/) {
+                    $stype = ($1) ? lc($1) : "q";
                     $seqid++;
                     $seqlabel = ${$ptr_display}[$i];
     
@@ -159,7 +160,7 @@ sub dump_template_wrapper($) {
                     if($seqid == 1) {
                         print "asn1 = $item:seq$seqid\@$seqlabel\n";
                     } else {
-                        print "field$fieldid\@$fieldlabel = $item:seq$seqid\@$seqlabel\n";
+                        print "field$fieldid\@$fieldlabel = $item:se".$stype."$seqid\@$seqlabel\n";
                     }
                 } else {
                     $i++;
@@ -198,7 +199,7 @@ sub dump_template_wrapper($) {
         while (scalar @{$queue} > 0) {
             $ptr_display = shift((@{$queue}));
             my $tmpseqref = shift((@{$queue}));
-            print "[seq$tmpseqref]\n";
+            print "[se$stype$tmpseqref]\n";
             $indent_level_display++;
             dump_template();
             $indent_level_display--;
