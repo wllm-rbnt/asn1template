@@ -124,7 +124,8 @@ sub parse_file($$) {
 my $indent_level_display;
 my $ptr_display;
 my ($fieldid, $fieldlabel);
-my ($stype, $seqid, $seqlabel);
+my ($seqid, $seqlabel);
+my @stype_stack = ();
 ####
 
 sub dump_template_wrapper($) {
@@ -148,7 +149,8 @@ sub dump_template_wrapper($) {
                 $fieldlabel = ${$ptr_display}[$i];
     
                 if($item =~ /^SE([QT])|^cont|^appl|^priv/) {
-                    $stype = ($1) ? lc($1) : "q";
+                    my $stype = ($1) ? lc($1) : "q";
+                    push @stype_stack, $stype;
                     $seqid++;
                     $seqlabel = ${$ptr_display}[$i];
     
@@ -196,6 +198,7 @@ sub dump_template_wrapper($) {
         while (scalar @{$queue} > 0) {
             $ptr_display = shift((@{$queue}));
             my $tmpseqref = shift((@{$queue}));
+            my $stype = pop @stype_stack;
             print "[se$stype$tmpseqref]\n";
             $indent_level_display++;
             dump_template();
