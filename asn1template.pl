@@ -7,26 +7,27 @@ use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
 my $fh;
-my $ftype = 'D';
-my $tmpfile = tmpnam();
+my $ftype = 'P';
 my $error_detected = 0;
 
 sub print_usage() {
 	print "Usage:\n";
-	print "\t$0 [DER|PEM encoded file]\n\n";
+	print "\t$0 <DER|PEM encoded file>\n\n";
 	exit(1);
 }
 
-sub read_file($) {
+sub open_file($) {
     my $srcfile = shift;
-    if(!open($fh, "openssl asn1parse -inform P -in $srcfile 2>/dev/null|")) {
-        if(!open($fh, "openssl asn1parse -inform D -in $srcfile 2>/dev/null|")) {
+    open($fh, "openssl asn1parse -inform P -in $srcfile 2>/dev/null|");
+    if(eof($fh)) {
+        close($fh);
+        $ftype = 'D';
+        open($fh, "openssl asn1parse -inform D -in $srcfile 2>/dev/null|");
+        if(eof($fh)) {
             print "Error: File format not recognized !\n\n";
             print_usage();
         }
-    } else {
-        $ftype = 'P';
-	}
+    }
 }
 
 sub parse_file($$) {
@@ -117,7 +118,6 @@ sub parse_file($$) {
         }
     }
     close($fh);
-    unlink $tmpfile;
 }
 
 # Display only vars
@@ -216,7 +216,7 @@ ${$asn1}[0] = $asn1;
 print_usage if scalar @ARGV != 1;
 print_usage if not -f $ARGV[0];
 
-read_file($ARGV[0]);
+open_file($ARGV[0]);
 parse_file($ARGV[0], $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
