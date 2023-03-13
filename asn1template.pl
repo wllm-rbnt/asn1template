@@ -6,7 +6,8 @@ use warnings;
 use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
-my $derfile;
+my $fh;
+my $ftype = 'D';
 my $tmpfile = tmpnam();
 my $error_detected = 0;
 
@@ -16,20 +17,16 @@ sub print_usage() {
 	exit(1);
 }
 
-sub test_format($) {
+sub read_file($) {
     my $srcfile = shift;
-    $tmpfile = tmpnam();
-    if(system("openssl asn1parse -in $srcfile -inform P -out $tmpfile >/dev/null 2>&1")) {
-        if(system("openssl asn1parse -in $srcfile -inform D -out $tmpfile >/dev/null 2>&1")) {
-            unlink $tmpfile;
+    if(!open($fh, "openssl asn1parse -inform P -in $srcfile 2>/dev/null|")) {
+        if(!open($fh, "openssl asn1parse -inform D -in $srcfile 2>/dev/null|")) {
             print "Error: File format not recognized !\n\n";
             print_usage();
-        } else {
-            $derfile = $srcfile;
         }
     } else {
-        $derfile = $tmpfile;
-    }
+        $ftype = 'P';
+	}
 }
 
 sub parse_file($$) {
@@ -45,8 +42,7 @@ sub parse_file($$) {
     my $data = '';
     my $line_number = 0;
 
-    open(SRCDER, "openssl asn1parse -inform D -in $srcfile |") or die 'Open failed !';
-    while(<SRCDER>) {
+    while(<$fh>) {
         $line_number++;
         chomp;
         $prev_indent_level = $indent_level;
@@ -101,7 +97,8 @@ sub parse_file($$) {
                $type eq 'UTF8STRING' or
                $type eq 'BMPSTRING') {
                 my $tmp_filename = tmpnam();
-                system 'openssl', 'asn1parse', '-in', $srcfile, '-inform', 'D', '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename;
+                system('openssl', 'asn1parse', '-in', $srcfile, '-inform', $ftype,
+                    '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename);
                 open(FD, $tmp_filename);
 
                 if($type eq 'BIT STRING') {
@@ -119,7 +116,7 @@ sub parse_file($$) {
             push(@{$ptr}, $data) if $type ne 'NULL';
         }
     }
-    close(SRCDER);
+    close($fh);
     unlink $tmpfile;
 }
 
@@ -216,8 +213,8 @@ ${$asn1}[0] = $asn1;
 print_usage if scalar @ARGV != 1;
 print_usage if not -f $ARGV[0];
 
-test_format($ARGV[0]);
-parse_file($derfile, $asn1);
+read_file($ARGV[0]);
+parse_file($ARGV[0], $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
 
