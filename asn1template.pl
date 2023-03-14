@@ -153,13 +153,13 @@ sub dump_template_wrapper($) {
                 $fieldid++;
                 $fieldlabel = ${$ptr_display}[$i];
     
-                if($item =~ /^SE([QT])|^cont|^appl|^priv/) {
+                if($item =~ /^SE([QT])|^cont|^appl|^priv|^univ/) {
                     my $stype = ($1) ? lc($1) : "q";
                     push(@{$stype_stack}, $stype);
                     $seqid++;
                     $seqlabel = ${$ptr_display}[$i];
     
-                    $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([cap])[ontpplriv]+\s+([0-9]+)/;
+                    $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
     
                     if($seqid == 1) {
                         print "asn1 = $item:seq$seqid\@$seqlabel\n";
