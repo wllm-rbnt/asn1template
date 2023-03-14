@@ -3,9 +3,11 @@
 ## Description
 
 This tool takes a DER or PEM encoded ASN1 structure and outputs the equivalent
-textual description that can be modified and later be fed to
+textual description that can be edited and later be fed to
 ASN1_generate_nconf(3) in order to build the equivalent DER encoded ASN1
 structure.
+
+See [examples](EXAMPLES.md).
 
 It's similar to https://github.com/google/der-ascii .
 
@@ -27,6 +29,15 @@ openssl-asn1parse```).
 The tool has been tested against the test certificate corpus available at
 https://github.com/johndoe31415/x509-cert-testcorpus (~1.7M certificates).
 
+
+### Dependencies
+
+- perl
+- openssl
+
+
+### Naming Convention
+
 Fields and sequences naming convention is the following:
 ```
 [type][id]@[offset]-[header_length]-[length]
@@ -47,11 +58,6 @@ encoded file. The header preceding the data is encoded using 4 bytes and the
 data account for 567 bytes for this sequence.
 
 
-## Examples
-
-See [examples](EXAMPLES.md).
-
-
 ## Limitations
 
 This script was written many years ago as a quick and dirty PoC. It was then
@@ -66,4 +72,4 @@ This tool has the same limitations as ASN1_generate_nconf(3):
 
 It will not output explicit tags as is, instead it will output a combination of
 implicit tags and sequences that will ultimately produce an equivalent output.
-Please refer to example #5 in EXAMPLES.md.
+Please refer to example #5 in [examples](EXAMPLES.md) section.
