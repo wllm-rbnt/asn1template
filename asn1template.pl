@@ -6,6 +6,11 @@ use warnings;
 use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
+# Path to the openssl binary
+my $openssl = `which openssl`;
+chomp($openssl);
+####
+
 my $fh;
 my $ftype = 'P';
 my $error_detected = 0;
@@ -18,11 +23,11 @@ sub print_usage() {
 
 sub open_file($) {
     my $srcfile = shift;
-    open($fh, "openssl asn1parse -inform P -in $srcfile 2>/dev/null|");
+    open($fh, "$openssl asn1parse -inform P -in $srcfile 2>/dev/null|");
     if(eof($fh)) {
         close($fh);
         $ftype = 'D';
-        open($fh, "openssl asn1parse -inform D -in $srcfile 2>/dev/null|");
+        open($fh, "$openssl asn1parse -inform D -in $srcfile 2>/dev/null|");
         if(eof($fh)) {
             print "Error: File format not recognized !\n\n";
             print_usage();
@@ -98,7 +103,7 @@ sub parse_file($$) {
                $type eq 'UTF8STRING' or
                $type eq 'BMPSTRING') {
                 my $tmp_filename = tmpnam();
-                system('openssl', 'asn1parse', '-in', $srcfile, '-inform', $ftype,
+                system($openssl, 'asn1parse', '-in', $srcfile, '-inform', $ftype,
                     '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename);
                 open(FD, $tmp_filename);
 
@@ -213,8 +218,8 @@ sub dump_template_wrapper($) {
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
-print_usage if scalar @ARGV != 1;
-print_usage if not -f $ARGV[0];
+do { print "Missing input file !\n\n"; print_usage } if scalar @ARGV != 1;
+do { print "File does not exist !\n\n"; print_usage } if not -f $ARGV[0];
 
 open_file($ARGV[0]);
 parse_file($ARGV[0], $asn1);
