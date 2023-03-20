@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 #use Data::Dump qw/dump/;
+use Carp;
 use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
 
@@ -11,33 +12,21 @@ my $openssl = `which openssl`;
 chomp($openssl);
 ####
 
-my $fh;
-my $ftype = 'P';
+my $ftype = 'D';
 my $error_detected = 0;
 
-sub print_usage() {
+sub print_usage {
 	print "Usage:\n";
 	print "\t$0 <DER|PEM encoded file>\n\n";
-	exit(1);
+	exit 1;
 }
 
-sub open_file($) {
-    my $srcfile = shift;
-    open($fh, "$openssl asn1parse -inform P -in $srcfile 2>/dev/null|");
-    if(eof($fh)) {
-        close($fh);
-        $ftype = 'D';
-        open($fh, "$openssl asn1parse -inform D -in $srcfile 2>/dev/null|");
-        if(eof($fh)) {
-            print "Error: File format not recognized !\n\n";
-            print_usage();
-        }
-    }
-}
-
-sub parse_file($$) {
+sub parse_file {
     my $srcfile = shift;
     my $ptr = shift;
+
+    open(my $fh, "-|", "$openssl asn1parse -inform $ftype -in $srcfile 2>/dev/null")
+        or croak "Error opening source file !";
 
     my $offset = 0;
     my $prev_indent_level = 0;
@@ -77,9 +66,9 @@ sub parse_file($$) {
 
         if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont|^appl|^priv/) {
             my $array_ref = [$ptr];
-            push(@{$ptr}, $type);
-            push(@{$ptr}, "$offset-$header_length-$length");
-            push(@{$ptr}, $array_ref);
+            push @{$ptr}, $type;
+            push @{$ptr}, "$offset-$header_length-$length";
+            push @{$ptr}, $array_ref;
             $ptr = $array_ref if $length > 0;
         } elsif($type eq 'INTEGER' or
                 $type eq 'OBJECT' or
@@ -95,8 +84,8 @@ sub parse_file($$) {
                 $type eq 'BMPSTRING' or
                 $type eq 'GENERALIZEDTIME') {
 
-            push(@{$ptr}, $type);
-            push(@{$ptr}, "$offset-$header_length-$length");
+            push @{$ptr}, $type;
+            push @{$ptr}, "$offset-$header_length-$length";
 
 
             if($type eq 'BIT STRING' or
@@ -124,10 +113,11 @@ sub parse_file($$) {
                     $data = "";
                 }
             }
-            push(@{$ptr}, $data) if $type ne 'NULL';
+            push @{$ptr}, $data if $type ne 'NULL';
         }
     }
     close($fh);
+    return;
 }
 
 # Display only vars
@@ -138,87 +128,88 @@ my ($seqid, $seqlabel);
 my $stype_stack = [];
 ####
 
-sub dump_template_wrapper($) {
+sub dump_template;
+sub dump_template {
+    my $length = scalar @{$ptr_display};
+    my $queue = [];
+    for(my $i = 1; $i < $length; $i++) {
+        my $item = ${$ptr_display}[$i];
+        if(ref $item eq 'ARRAY') {
+            push @{$queue}, $item;
+            push @{$queue}, "$seqid\@$seqlabel";
+        } else {
+            $i++;
+            $fieldid++;
+            $fieldlabel = ${$ptr_display}[$i];
+
+            if($item =~ /^SE([QT])|^cont|^appl|^priv|^univ/) {
+                my $stype = ($1) ? lc($1) : "q";
+                push @{$stype_stack}, $stype ;
+                $seqid++;
+                $seqlabel = ${$ptr_display}[$i];
+
+                $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
+
+                if($seqid == 1) {
+                    print "asn1 = $item:seq$seqid\@$seqlabel\n";
+                } else {
+                    print "field$fieldid\@$fieldlabel = $item:se".$stype."$seqid\@$seqlabel\n";
+                }
+            } else {
+                $i++;
+
+                if($item eq 'NULL') {
+                    print "field$fieldid\@$fieldlabel = $item\n";
+                } elsif ($item eq 'OCTET STRING') {
+                    if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
+                        print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                    } else {
+                        print "field$fieldid\@$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
+                    }
+                } elsif ($item eq 'INTEGER') {
+                    ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
+                    print "field$fieldid\@$fieldlabel = $item:0x$1\n";
+                } elsif ($item eq 'BOOLEAN') {
+                    if(${$ptr_display}[$i] =~ /255/) {
+                        print "field$fieldid\@$fieldlabel = $item:true\n";
+                    } else {
+                        print "field$fieldid\@$fieldlabel = $item:false\n";
+                    }
+                } elsif ($item eq 'BIT STRING') {
+                    print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
+                } elsif ($item eq 'UTF8STRING') {
+                    print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                } elsif ($item eq 'BMPSTRING') {
+                    print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
+                    print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                } else {
+                    print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
+                }
+            }
+        }
+    }
+    while (scalar @{$queue} > 0) {
+        $ptr_display = shift((@{$queue}));
+        my $tmpseqref = shift((@{$queue}));
+        my $stype = pop(@{$stype_stack});
+        print "[se$stype$tmpseqref]\n";
+        $indent_level_display++;
+        dump_template();
+        $indent_level_display--;
+        $ptr_display = ${$ptr_display}[0];
+    }
+    return;
+}
+
+sub dump_template_wrapper {
     $ptr_display = shift;
     $indent_level_display = 0;
     $fieldid = 0;
     $seqid = 0;
-    
-    sub dump_template();
-    sub dump_template() {
-        my $length = scalar @{$ptr_display};
-        my $queue = [];
-        for(my $i = 1; $i < $length; $i++) {
-            my $item = ${$ptr_display}[$i];
-            if(ref $item eq 'ARRAY') {
-                push(@{$queue}, $item);
-                push(@{$queue}, "$seqid\@$seqlabel");
-            } else {
-                $i++;
-                $fieldid++;
-                $fieldlabel = ${$ptr_display}[$i];
-    
-                if($item =~ /^SE([QT])|^cont|^appl|^priv|^univ/) {
-                    my $stype = ($1) ? lc($1) : "q";
-                    push(@{$stype_stack}, $stype);
-                    $seqid++;
-                    $seqlabel = ${$ptr_display}[$i];
-    
-                    $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
-    
-                    if($seqid == 1) {
-                        print "asn1 = $item:seq$seqid\@$seqlabel\n";
-                    } else {
-                        print "field$fieldid\@$fieldlabel = $item:se".$stype."$seqid\@$seqlabel\n";
-                    }
-                } else {
-                    $i++;
-    
-                    if($item eq 'NULL') {
-                        print "field$fieldid\@$fieldlabel = $item\n";
-                    } elsif ($item eq 'OCTET STRING') {
-                        if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
-                            print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
-                        } else {
-                            print "field$fieldid\@$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
-                        }
-                    } elsif ($item eq 'INTEGER') {
-                        ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
-                        print "field$fieldid\@$fieldlabel = $item:0x$1\n";
-                    } elsif ($item eq 'BOOLEAN') {
-                        if(${$ptr_display}[$i] =~ /255/) {
-                            print "field$fieldid\@$fieldlabel = $item:true\n";
-                        } else {
-                            print "field$fieldid\@$fieldlabel = $item:false\n";
-                        }
-                    } elsif ($item eq 'BIT STRING') {
-                        print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
-                    } elsif ($item eq 'UTF8STRING') {
-                        print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
-                    } elsif ($item eq 'BMPSTRING') {
-                        print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
-                    } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
-                        print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
-                    } else {
-                        print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
-                    }
-                }
-            }
-        }
-        while (scalar @{$queue} > 0) {
-            $ptr_display = shift((@{$queue}));
-            my $tmpseqref = shift((@{$queue}));
-            my $stype = pop(@{$stype_stack});
-            print "[se$stype$tmpseqref]\n";
-            $indent_level_display++;
-            dump_template();
-            $indent_level_display--;
-            $ptr_display = ${$ptr_display}[0];
-        }
-    }
     dump_template();
+    return;
 }
-
 
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
@@ -226,10 +217,9 @@ ${$asn1}[0] = $asn1;
 do { print "Missing input file !\n\n"; print_usage } if scalar @ARGV != 1;
 do { print "File does not exist !\n\n"; print_usage } if not -f $ARGV[0];
 
-open_file($ARGV[0]);
 parse_file($ARGV[0], $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
 
-exit($error_detected);
+exit $error_detected ;
 
