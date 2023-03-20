@@ -102,22 +102,27 @@ sub parse_file($$) {
             if($type eq 'BIT STRING' or
                $type eq 'UTF8STRING' or
                $type eq 'BMPSTRING') {
-                my $tmp_filename = tmpnam();
-                system($openssl, 'asn1parse', '-in', $srcfile, '-inform', $ftype,
-                    '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename);
-                open(FD, $tmp_filename);
+	            if($length gt 0) {
+                    my $tmp_filename = tmpnam();
+                    system($openssl, 'asn1parse', '-in', $srcfile, '-inform', $ftype,
+                        '-offset', $offset + $header_length, '-length', $length, '-noout', '-out', $tmp_filename);
+                    open(my $tmpfh, "<", $tmp_filename)
+                        or croak "Error opening tmp file!";
 
-                if($type eq 'BIT STRING') {
+                    if($type eq 'BIT STRING') {
+                        $data = "";
+                        $data .= uc unpack "H*", $_ while(<$tmpfh>);
+                        $data = $data =~ /^00(.*)/ ? $1 : $data;
+                    } elsif ($type eq 'UTF8STRING') {
+                        $data = <$tmpfh>;
+                    } elsif ($type eq 'BMPSTRING') {
+                        $data = decode("UTF-16BE", <$tmpfh>);
+                    }
+                    close($tmpfh);
+                    unlink $tmp_filename;
+                } else {
                     $data = "";
-                    $data .= uc unpack "H*", $_ while(<FD>);
-                    $data = $data =~ /^00(.*)/ ? $1 : $data;
-                } elsif ($type eq 'UTF8STRING') {
-                    $data = <FD>;
-                } elsif ($type eq 'BMPSTRING') {
-                    $data = decode("UTF-16BE", <FD>);
                 }
-                close(FD);
-                unlink $tmp_filename;
             }
             push(@{$ptr}, $data) if $type ne 'NULL';
         }
