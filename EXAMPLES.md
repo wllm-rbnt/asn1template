@@ -211,7 +211,7 @@ $ wget -o /dev/null https://pki.goog/repo/certs/gtsr1.pem
 Convert it to an ASN1_generate_nconf(3) compatible textual description:
 
 ```bash
-$ ./asn1template.pl gtsr1.pem > gtsr1.tpl
+$ ./asn1template.pl --pem gtsr1.pem > gtsr1.tpl
 ```
 
 Convert it back to DER encoded ASN1 with ASN1_generate_nconf(3):

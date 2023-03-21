@@ -16,9 +16,10 @@ my $ftype = 'D';
 my $error_detected = 0;
 
 sub print_usage {
-	print "Usage:\n";
-	print "\t$0 <--der|--pem> encoded_file\n\n";
-	exit 1;
+    print "Usage:\n";
+    print "\t$0 [--pem|-p] <encoded_file>\n\n";
+    print "Default input file format is DER, use --pem or -p option to switch to PEM\n\n";
+    exit 1
 }
 
 sub parse_file {
@@ -117,7 +118,7 @@ sub parse_file {
         }
     }
     close($fh);
-    return;
+    return
 }
 
 # Display only vars
@@ -199,7 +200,7 @@ sub dump_template {
         $indent_level_display--;
         $ptr_display = ${$ptr_display}[0];
     }
-    return;
+    return
 }
 
 sub dump_template_wrapper {
@@ -208,19 +209,26 @@ sub dump_template_wrapper {
     $fieldid = 0;
     $seqid = 0;
     dump_template();
-    return;
+    return
 }
 
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
-do { print "Wrong arguments !\n\n"; print_usage } if scalar @ARGV != 2;
-do { print "Wrong option !\n\n"; print_usage } if not ($ARGV[0] eq "--der" or $ARGV[0] eq "--pem");
-do { print "File does not exist !\n\n"; print_usage } if not -f $ARGV[1];
+do { print "Wrong arguments !\n\n"; print_usage } if (scalar @ARGV < 1 or scalar @ARGV > 2);
 
-$ftype = 'P' if $ARGV[0] eq "--pem";
+if(scalar @ARGV == 2) {
+    my $arg = shift @ARGV;
+    if($arg eq "--pem" or $arg eq "-p") {
+        $ftype = 'P'
+    } else {
+        print "Wrong option !\n\n";
+        print_usage
+    }
+}
+do { print "File does not exist !\n\n"; print_usage } if not -f $ARGV[0];
 
-parse_file($ARGV[1], $asn1);
+parse_file($ARGV[0], $asn1);
 #dump($asn1);
 dump_template_wrapper($asn1);
 
