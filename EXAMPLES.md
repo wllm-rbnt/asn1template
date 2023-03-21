@@ -66,8 +66,8 @@ field13@10-2-1 = INTEGER:0x02
 [seq5@35-2-10]
 field14@37-2-8 = OBJECT:ecdsa-with-SHA256
 [seq6@47-2-15]
-field15@49-2-13 = SET:seq11@49-2-13
-[seq11@49-2-13]
+field15@49-2-13 = SET:set11@49-2-13
+[set11@49-2-13]
 field16@51-2-11 = SEQUENCE:seq12@51-2-11
 [seq12@51-2-11]
 field17@53-2-3 = OBJECT:commonName
@@ -76,8 +76,8 @@ field18@58-2-4 = FORMAT:UTF8,UTF8String:"TEST"
 field19@66-2-13 = UTCTIME:220818134153Z
 field20@81-2-13 = UTCTIME:230813134153Z
 [seq8@96-2-15]
-field21@98-2-13 = SET:seq13@98-2-13
-[seq13@98-2-13]
+field21@98-2-13 = SET:set13@98-2-13
+[set13@98-2-13]
 field22@100-2-11 = SEQUENCE:seq14@100-2-11
 [seq14@100-2-11]
 field23@102-2-3 = OBJECT:commonName
