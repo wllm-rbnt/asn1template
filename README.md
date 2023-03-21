@@ -38,12 +38,12 @@ https://github.com/johndoe31415/x509-cert-testcorpus (~1.7M certificates).
 
 ### Naming Convention
 
-Fields and sequences naming convention is the following:
+Fields and sequences/sets naming convention is the following:
 ```
 [type][id]@[offset]-[header_length]-[length]
 ```
 where
-- [type] is either the string "field" or "seq",
+- [type] is either the string "field", "seq" or "set",
 - [id] is a incremental numeric identifier,
 - [offset] is the offset of the object or sequence in the original encoded file,
 - [header_length] is length of the header preceding the data in the original encoded file,
