@@ -29,6 +29,18 @@ openssl-asn1parse```).
 The tool has been tested against the test certificate corpus available at
 https://github.com/johndoe31415/x509-cert-testcorpus (~1.7M certificates).
 
+The tests consist in the conversion from DER to template using
+```asn1template.pl```, then back to DER using the ```-genconf``` option of the
+asn1parse OpenSSL app. The resulting DER file should be identical to the original one.
+From the 1 740 319 available certificates, only 32 do not pass the conversion tests.
+
+The reasons were:
+- Illegal characters in PrintableStrings for 30 of them
+- Line feed in an OCTET STRING for another one
+- Unicode butchery for the last one
+
+(See [limitations](#limitations) section below for more info)
+
 
 ### Dependencies
 
@@ -73,3 +85,8 @@ This tool has the same limitations as ASN1_generate_nconf(3):
 It will not output explicit tags as is, instead it will output a combination of
 implicit tags and sequences that will ultimately produce an equivalent output.
 Please refer to example #5 in [examples](EXAMPLES.md) section.
+
+Line feeds in OCTET STRINGs break the conversion.
+
+Unicode strings are sometimes broken and might require adjustments.
+
