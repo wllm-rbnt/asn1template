@@ -1,10 +1,10 @@
-# ASN1 templating for fun and profit
+# ASN.1 templating for fun and profit
 
 ## Description
 
-This tool takes a DER or PEM encoded ASN1 structure and outputs the equivalent
+This tool takes a DER or PEM encoded ASN.1 structure and outputs the equivalent
 textual description that can be edited and later be fed to
-ASN1_generate_nconf(3) in order to build the equivalent DER encoded ASN1
+ASN1_generate_nconf(3) in order to build the equivalent DER encoded ASN.1
 structure.
 
 See [examples](EXAMPLES.md).

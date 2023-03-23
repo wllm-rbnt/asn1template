@@ -1,4 +1,4 @@
-# ASN1 templating for fun and profit - Examples
+# ASN.1 templating for fun and profit - Examples
 
 ## Example #1 - DER Encoded Certificate
 
@@ -14,7 +14,7 @@ Convert it to an ASN1_generate_nconf(3) compatible textual description:
 $ ./asn1template.pl gtsr1.der > gtsr1.tpl
 ```
 
-Convert it back to DER encoded ASN1 with ASN1_generate_nconf(3):
+Convert it back to DER encoded ASN.1 with ASN1_generate_nconf(3):
 
 ```bash
 $ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.der
@@ -145,7 +145,7 @@ $ diff -u cert.tpl cert_new.tpl
  [seq19@418-2-81]
 ```
 
-Then convert the template back to DER encoded ASN1:
+Then convert the template back to DER encoded ASN.1:
 ```bash
 $ openssl asn1parse -genconf cert_new.tpl -noout -out cert_new.der
 
@@ -158,7 +158,7 @@ $ openssl x509 -inform DER -in cert_new.der -noout -text
 
 ## Example #3 - CRL file and PKCS7
 
-It works on certificates, but, more generally, on arbitrary DER encoded ASN1
+It works on certificates, but, more generally, on arbitrary DER encoded ASN.1
 blobs. Here is the same as example #1 but with a CRL file:
 
 ```bash
@@ -214,7 +214,7 @@ Convert it to an ASN1_generate_nconf(3) compatible textual description:
 $ ./asn1template.pl --pem gtsr1.pem > gtsr1.tpl
 ```
 
-Convert it back to DER encoded ASN1 with ASN1_generate_nconf(3):
+Convert it back to DER encoded ASN.1 with ASN1_generate_nconf(3):
 
 ```bash
 $ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.der
