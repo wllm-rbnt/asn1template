@@ -4,25 +4,141 @@
 
 This tool takes a DER or PEM encoded ASN.1 structure and outputs the equivalent
 textual description that can be edited and later be fed to
-ASN1_generate_nconf(3) in order to build the equivalent DER encoded ASN.1
+```ASN1_generate_nconf(3)``` in order to build the equivalent DER encoded ASN.1
 structure.
 
-See [examples](EXAMPLES.md).
+Here is an example. First, let's convert a PEM encoded certificate to a textual
+representation supported by ```ASN1_generate_nconf(3)```. The certificate we
+use in this example is a root CA certificate from Amazon. On Debian, it belongs
+to the ```ca-certificates``` package.
 
-It's similar to https://github.com/google/der-ascii .
+```
+$ ./asn1template.pl --pem /etc/ssl/certs/Amazon_Root_CA_3.pem | tee Amazon_Root_CA_3.tpl
+asn1 = SEQUENCE:seq1@0-4-438
+[seq1@0-4-438]
+field2@4-4-347 = SEQUENCE:seq2@4-4-347
+field3@355-2-10 = SEQUENCE:seq3@355-2-10
+field4@367-2-73 = FORMAT:HEX,BITSTRING:3046022100E08592A317B78DF92B06A593AC1A98686172FAE1A1D0FB1C7860A64399C5B8C40221009C02EFF1949CB396F9EBC62AF8B62CFE3A901416D78C6324481CDF307DD5683B
+[seq2@4-4-347]
+field5@8-2-3 = IMPLICIT:0C,SEQUENCE:seq4@8-2-3
+field6@13-2-19 = INTEGER:0x066C9FD5749736663F3B0B9AD9E89E7603F24A
+field7@34-2-10 = SEQUENCE:seq5@34-2-10
+field8@46-2-57 = SEQUENCE:seq6@46-2-57
+field9@105-2-30 = SEQUENCE:seq7@105-2-30
+field10@137-2-57 = SEQUENCE:seq8@137-2-57
+field11@196-2-89 = SEQUENCE:seq9@196-2-89
+field12@287-2-66 = IMPLICIT:3C,SEQUENCE:seq10@287-2-66
+[seq4@8-2-3]
+field13@10-2-1 = INTEGER:0x02
+[seq5@34-2-10]
+field14@36-2-8 = OBJECT:ecdsa-with-SHA256
+[seq6@46-2-57]
+field15@48-2-11 = SET:set11@48-2-11
+field16@61-2-15 = SET:set12@61-2-15
+field17@78-2-25 = SET:set13@78-2-25
+[set11@48-2-11]
+field18@50-2-9 = SEQUENCE:seq14@50-2-9
+[seq14@50-2-9]
+field19@52-2-3 = OBJECT:countryName
+field20@57-2-2 = PRINTABLESTRING:"US"
+[set12@61-2-15]
+field21@63-2-13 = SEQUENCE:seq15@63-2-13
+[seq15@63-2-13]
+field22@65-2-3 = OBJECT:organizationName
+field23@70-2-6 = PRINTABLESTRING:"Amazon"
+[set13@78-2-25]
+field24@80-2-23 = SEQUENCE:seq16@80-2-23
+[seq16@80-2-23]
+field25@82-2-3 = OBJECT:commonName
+field26@87-2-16 = PRINTABLESTRING:"Amazon\ Root\ CA\ 3"
+[seq7@105-2-30]
+field27@107-2-13 = UTCTIME:150526000000Z
+field28@122-2-13 = UTCTIME:400526000000Z
+[seq8@137-2-57]
+field29@139-2-11 = SET:set17@139-2-11
+field30@152-2-15 = SET:set18@152-2-15
+field31@169-2-25 = SET:set19@169-2-25
+[set17@139-2-11]
+field32@141-2-9 = SEQUENCE:seq20@141-2-9
+[seq20@141-2-9]
+field33@143-2-3 = OBJECT:countryName
+field34@148-2-2 = PRINTABLESTRING:"US"
+[set18@152-2-15]
+field35@154-2-13 = SEQUENCE:seq21@154-2-13
+[seq21@154-2-13]
+field36@156-2-3 = OBJECT:organizationName
+field37@161-2-6 = PRINTABLESTRING:"Amazon"
+[set19@169-2-25]
+field38@171-2-23 = SEQUENCE:seq22@171-2-23
+[seq22@171-2-23]
+field39@173-2-3 = OBJECT:commonName
+field40@178-2-16 = PRINTABLESTRING:"Amazon\ Root\ CA\ 3"
+[seq9@196-2-89]
+field41@198-2-19 = SEQUENCE:seq23@198-2-19
+field42@219-2-66 = FORMAT:HEX,BITSTRING:042997A7C6417FC00D9BE8011B56C6F252A5BA2DB212E8D22ED7FAC9C5D8AA6D1F73813B3B986B397C33A5C54E868E8017686245577D44581DB337E56708EB66DE
+[seq23@198-2-19]
+field43@200-2-7 = OBJECT:id-ecPublicKey
+field44@209-2-8 = OBJECT:prime256v1
+[seq10@287-2-66]
+field45@289-2-64 = SEQUENCE:seq24@289-2-64
+[seq24@289-2-64]
+field46@291-2-15 = SEQUENCE:seq25@291-2-15
+field47@308-2-14 = SEQUENCE:seq26@308-2-14
+field48@324-2-29 = SEQUENCE:seq27@324-2-29
+[seq25@291-2-15]
+field49@293-2-3 = OBJECT:X509v3 Basic Constraints
+field50@298-2-1 = BOOLEAN:true
+field51@301-2-5 = FORMAT:HEX,OCTETSTRING:30030101FF
+[seq26@308-2-14]
+field52@310-2-3 = OBJECT:X509v3 Key Usage
+field53@315-2-1 = BOOLEAN:true
+field54@318-2-4 = FORMAT:HEX,OCTETSTRING:03020186
+[seq27@324-2-29]
+field55@326-2-3 = OBJECT:X509v3 Subject Key Identifier
+field56@331-2-22 = FORMAT:HEX,OCTETSTRING:0414ABB6DBD7069E37AC3086079170C79CC419B178C0
+[seq3@355-2-10]
+field57@357-2-8 = OBJECT:ecdsa-with-SHA256
+$ echo $?
+0
+```
 
-It works by reading the output of the asn1parse OpenSSL app in order to build
+A return code of ```0``` indicates success.
+
+This text representation (what we call a template) can be edited at will before
+going back to the original format of the certificate. For the sake of this
+example, and in order to validate the concept, we will not edit it. We simply
+convert this template back to its original form using
+```ASN1_generate_nconf(3)```.  This is done in 2 steps, first convert it to a
+DER encoded file, then convert this DER file to PEM format:
+
+```
+$ openssl asn1parse -genconf Amazon_Root_CA_3.tpl -out Amazon_Root_CA_3_new.der
+$ openssl x509 -in Amazon_Root_CA_3_new.der -out Amazon_Root_CA_3_new.pem -outform PEM
+```
+
+We can see that the original file and the one we regenerated are identical:
+```
+$ diff -u /etc/ssl/certs/Amazon_Root_CA_3.pem Amazon_Root_CA_3_new.pem
+$ echo $?
+0
+```
+
+See [this page](EXAMPLES.md) for more examples.
+
+```asn1template.pl``` is similar to https://github.com/google/der-ascii .
+
+It works by reading the output of the ```asn1parse``` OpenSSL app in order to build
 an internal structure that is then dumped to the equivalent
-ASN1_generate_nconf(3) compatible textual representation.
+```ASN1_generate_nconf(3)``` compatible textual representation.
 
 The syntax of this textual representation is documented in the man page of
-ASN1_generate_nconf(3):
+```ASN1_generate_nconf(3)```:
 
 ```bash
 $ man 3 ASN1_generate_nconf
 ```
 
-This function is reachable via the ```-genconf``` option of the asn1parse
+This function is reachable via the ```-genconf``` option of the ```asn1parse```
 OpenSSL app (more info in the manual page: ```man asn1parse``` or ```man
 openssl-asn1parse```).
 
@@ -31,7 +147,7 @@ https://github.com/johndoe31415/x509-cert-testcorpus (~1.7M certificates).
 
 The tests consist in the conversion from DER to template using
 ```asn1template.pl```, then back to DER using the ```-genconf``` option of the
-asn1parse OpenSSL app. The resulting DER file should be identical to the original one.
+```asn1parse``` OpenSSL app. The resulting DER file should be identical to the original one.
 From the 1 740 319 available certificates, only 32 do not pass the conversion tests.
 
 The reasons were:
@@ -75,7 +191,7 @@ data account for 567 bytes for this sequence.
 This script was written many years ago as a quick and dirty PoC. It was then
 improved to support DER structures found in the wild (i.e. certificates).
 
-This tool has the same limitations as ASN1_generate_nconf(3):
+This tool has the same limitations as ```ASN1_generate_nconf(3)```:
  - it does not support indefinite length encoding
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
@@ -89,4 +205,6 @@ Please refer to example #5 in [examples](EXAMPLES.md) section.
 Line feeds in OCTET STRINGs break the conversion.
 
 Unicode strings are sometimes broken and might require adjustments.
+
+ENUM and some string types are not supported yet by ```asn1template.pl```.
 
