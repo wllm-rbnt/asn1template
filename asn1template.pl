@@ -34,6 +34,7 @@ sub parse_file {
     my $indent_level = 0;
     my $header_length = 0;
     my $length = 0;
+    my $class = '';
     my $type = '';
     my $data = '';
     my $line_number = 0;
@@ -42,19 +43,22 @@ sub parse_file {
         $line_number++;
         chomp;
         $prev_indent_level = $indent_level;
-        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*(cont|appl|priv)\s*\[\s*([0-9]*)\s*\]\s*/ ) {
+        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+([a-z]+):\s*(<ASN1|cont|appl|priv)\s*\[?\s*([0-9]+)\s*[\]>]\s*/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
             $length = int($4);
-            $type = $5." ".$6;
-        } elsif( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+[a-z]+:\s*([A-Z0-9\s]*[A-Z0-9])\s*:?(.*)?/ ) {
+            $class = $5;
+            $type = ($6 eq "<ASN1") ? "univ" : $6;
+            $type = $type." ".$7;
+        } elsif( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+([a-z]+):\s*([A-Z0-9\s]*[A-Z0-9])\s*:?(.*)?/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
             $length = int($4);
-            $type = $5;
-            $data = $6 if defined($6);
+            $class = $5;
+            $type = $6;
+            $data = $7 if defined($7);
         } else {
             print STDERR "Error could not parse input line #${line_number}!\n";
             $error_detected = 1;
@@ -65,33 +69,22 @@ sub parse_file {
             $ptr = ${$ptr}[0];
         }
 
-        if($type eq 'SEQUENCE' or $type eq 'SET' or $type =~ /^cont|^appl|^priv/) {
+        if($class eq 'cons') {
             my $array_ref = [$ptr];
             push @{$ptr}, $type;
+            push @{$ptr}, $class;
             push @{$ptr}, "$offset-$header_length-$length";
             push @{$ptr}, $array_ref;
             $ptr = $array_ref if $length > 0;
-        } elsif($type eq 'INTEGER' or
-                $type eq 'OBJECT' or
-                $type eq 'PRINTABLESTRING' or
-                $type eq 'NULL' or
-                $type eq 'BOOLEAN' or
-                $type eq 'BIT STRING' or
-                $type eq 'UTCTIME' or
-                $type eq 'OCTET STRING' or
-                $type eq 'T61STRING' or
-                $type eq 'UTF8STRING' or
-                $type eq 'IA5STRING' or
-                $type eq 'BMPSTRING' or
-                $type eq 'GENERALIZEDTIME') {
-
+        } else {
             push @{$ptr}, $type;
+            push @{$ptr}, $class;
             push @{$ptr}, "$offset-$header_length-$length";
-
 
             if($type eq 'BIT STRING' or
                $type eq 'UTF8STRING' or
-               $type eq 'BMPSTRING') {
+               $type eq 'BMPSTRING' or
+               $type =~ /^(cont|appl|priv|univ)\s+[0-9]+/) {
 	            if($length > 0) {
                     my $tmp_filename = tmpnam();
                     system($openssl, 'asn1parse', '-in', $srcfile, '-inform', $ftype,
@@ -99,7 +92,7 @@ sub parse_file {
                     open(my $tmpfh, "<", $tmp_filename)
                         or croak "Error opening tmp file!";
 
-                    if($type eq 'BIT STRING') {
+                    if($type eq 'BIT STRING' or $type =~ /^(cont|appl|priv|univ)\s+[0-9]+/) {
                         $data = "";
                         $data .= uc unpack "H*", $_ while(<$tmpfh>);
                         $data = $data =~ /^00(.*)/ ? $1 : $data;
@@ -124,6 +117,7 @@ sub parse_file {
 # Display only vars
 my $indent_level_display;
 my $ptr_display;
+my $class;
 my ($fieldid, $fieldlabel);
 my ($seqid, $seqlabel);
 my $stype_stack = [];
@@ -141,10 +135,12 @@ sub dump_template {
         } else {
             $i++;
             $fieldid++;
+            $class = ${$ptr_display}[$i];
+            $i++;
             $fieldlabel = ${$ptr_display}[$i];
 
-            if($item =~ /^SE([QT])|^cont|^appl|^priv|^univ/) {
-                my $stype = ($1) ? lc($1) : "q";
+            if($class eq 'cons') {
+                my $stype = ($item =~ /^SE([QT])/) ? lc($1) : "q";
                 push @{$stype_stack}, $stype ;
                 $seqid++;
                 $seqlabel = ${$ptr_display}[$i];
@@ -159,7 +155,9 @@ sub dump_template {
             } else {
                 $i++;
 
-                if($item eq 'NULL') {
+                if($item =~ /^([capu])[ontplriv]+\s+([0-9]+)/) {
+                    print "field$fieldid\@$fieldlabel = IMPLICIT:$2".uc($1).",FORMAT:HEX,"."OCTETSTRING:${$ptr_display}[$i]\n";
+                } elsif($item eq 'NULL') {
                     print "field$fieldid\@$fieldlabel = $item\n";
                 } elsif ($item eq 'OCTET STRING') {
                     if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
