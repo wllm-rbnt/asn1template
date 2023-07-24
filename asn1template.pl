@@ -2,6 +2,9 @@
 
 use strict;
 use warnings;
+################
+# "apt install libdata-dump-perl"
+# or "dnf install perl-Data-Dump"
 #use Data::Dump qw/dump/;
 use Carp;
 use Encode qw/decode/;
@@ -43,7 +46,7 @@ sub parse_file {
         $line_number++;
         chomp;
         $prev_indent_level = $indent_level;
-        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+([a-z]+):\s*(<ASN1|cont|appl|priv)\s*\[?\s*([0-9]+)\s*[\]>]\s*/ ) {
+        if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*(inf|[0-9]+)\s+([a-z]+):\s*(<ASN1|cont|appl|priv)\s*\[?\s*([0-9]+)\s*[\]>]\s*/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
@@ -51,7 +54,7 @@ sub parse_file {
             $class = $5;
             $type = ($6 eq "<ASN1") ? "univ" : $6;
             $type = $type." ".$7;
-        } elsif( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*([0-9]+)\s+([a-z]+):\s*([A-Z0-9\s]*[A-Z0-9])\s*:?(.*)?/ ) {
+        } elsif( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*(inf|[0-9]+)\s+([a-z]+):\s*([A-Z0-9\s]*[A-Z0-9])\s*:?(.*)?/ ) {
             $offset = int($1);
             $indent_level = int($2);
             $header_length = int($3);
@@ -63,6 +66,11 @@ sub parse_file {
             print STDERR "Error could not parse input line #${line_number}!\n";
             $error_detected = 1;
             next;
+        }
+
+        if($length == "Inf") {
+            print STDERR "Indefinite length encoding detected at line #${line_number}\n";
+            $error_detected = 2;
         }
 
         for(my $i = 0; $i < $prev_indent_level - $indent_level; $i++) {
@@ -182,6 +190,7 @@ sub dump_template {
                     print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
                 } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
                     print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                } elsif ($item eq 'EOC') {
                 } else {
                     print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
                 }

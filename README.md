@@ -185,6 +185,15 @@ is the second sequence. It is located at the third byte in the original
 encoded file. The header preceding the data is encoded using 4 bytes and the
 data account for 567 bytes for this sequence.
 
+### Output & Return Code
+
+The template is printed on STDOUT, error messages are printed on STDERR, if
+any.
+
+Return codes:
+- ```0```: Success.
+- ```1```: Unparseable line encountered.
+- ```2```: Indefinite length encoding detected.
 
 ## Limitations
 
@@ -192,7 +201,8 @@ This script was written many years ago as a quick and dirty PoC. It was then
 improved to support DER structures found in the wild (i.e. certificates).
 
 This tool has the same limitations as ```ASN1_generate_nconf(3)```:
- - it does not support indefinite length encoding
+ - it does not support indefinite length encoding, regular length encoding is
+   used instead.
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
    forbidden characters such as ```*```, ```@```, ```&``` or ```_```
