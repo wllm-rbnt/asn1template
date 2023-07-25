@@ -202,7 +202,7 @@ improved to support DER structures found in the wild (i.e. certificates).
 
 This tool has the same limitations as ```ASN1_generate_nconf(3)```:
  - it does not support indefinite length encoding, regular length encoding is
-   used instead.
+   used instead. EOC tags are preserved.
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
    forbidden characters such as ```*```, ```@```, ```&``` or ```_```

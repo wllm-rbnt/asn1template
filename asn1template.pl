@@ -191,6 +191,7 @@ sub dump_template {
                 } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
                     print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                 } elsif ($item eq 'EOC') {
+                    print "field$fieldid\@$fieldlabel = IMPLICIT:0U,PRINTABLESTRING:\"\"\n"
                 } else {
                     print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
                 }
