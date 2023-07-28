@@ -164,7 +164,8 @@ sub dump_template {
                 $i++;
 
                 if($item =~ /^([capu])[ontplriv]+\s+([0-9]+)/) {
-                    print "field$fieldid\@$fieldlabel = IMPLICIT:$2".uc($1).",FORMAT:HEX,"."OCTETSTRING:${$ptr_display}[$i]\n";
+                    my $hexfmt = (${$ptr_display}[$i] eq "") ? "" : ",FORMAT:HEX";
+                    print "field$fieldid\@$fieldlabel = IMPLICIT:$2".uc($1)."$hexfmt,OCTETSTRING:${$ptr_display}[$i]\n";
                 } elsif($item eq 'NULL') {
                     print "field$fieldid\@$fieldlabel = $item\n";
                 } elsif ($item eq 'OCTET STRING') {
