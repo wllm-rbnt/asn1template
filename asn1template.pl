@@ -9,6 +9,7 @@ use warnings;
 use Carp;
 use Encode qw/decode/;
 use File::Temp qw/:POSIX/;
+use Getopt::Long;
 
 # Path to the openssl binary
 my $openssl = `which openssl`;
@@ -224,17 +225,12 @@ sub dump_template_wrapper {
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
-do { print "Wrong arguments !\n\n"; print_usage } if (scalar @ARGV < 1 or scalar @ARGV > 2);
+GetOptions(
+    'pem|p'   => sub { $ftype = 'P' },
+) or do { print_usage };
 
-if(scalar @ARGV == 2) {
-    my $arg = shift @ARGV;
-    if($arg eq "--pem" or $arg eq "-p") {
-        $ftype = 'P'
-    } else {
-        print "Wrong option !\n\n";
-        print_usage
-    }
-}
+do { print "Missing filename !\n\n"; print_usage } if (scalar @ARGV < 1);
+do { print "Too many arguments !\n\n"; print_usage } if (scalar @ARGV > 1);
 do { print "File does not exist !\n\n"; print_usage } if not -f "$ARGV[0]";
 
 parse_file($ARGV[0], $asn1);
