@@ -29,7 +29,7 @@ sub parse_file {
     my $srcfile = shift;
     my $ptr = shift;
 
-    open(my $fh, "-|", "$openssl asn1parse -inform $ftype -in $srcfile 2>/dev/null")
+    open(my $fh, "-|", "$openssl asn1parse -inform $ftype -in '$srcfile' 2>/dev/null")
         or croak "Error opening source file !";
 
     my $offset = 0;
@@ -234,7 +234,7 @@ if(scalar @ARGV == 2) {
         print_usage
     }
 }
-do { print "File does not exist !\n\n"; print_usage } if not -f $ARGV[0];
+do { print "File does not exist !\n\n"; print_usage } if not -f "$ARGV[0]";
 
 parse_file($ARGV[0], $asn1);
 #dump($asn1);
