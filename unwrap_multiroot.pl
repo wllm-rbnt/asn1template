@@ -2,7 +2,6 @@
 
 use strict;
 use warnings;
-use Data::Dump qw/dump/;
 use Carp;
 use Getopt::Long;
 
@@ -31,12 +30,13 @@ do { print "File does not exist !\n\n"; print_usage } if not -f "$ARGV[0]";
 my $srcfile = shift;
 open(my $fh, "-|", "$openssl asn1parse -inform $ftype -in '$srcfile' 2>/dev/null")
     or croak "Error opening source file !";
+my $line = <$fh>;
+close($fh);
 
 my $header_length = 0;
 my $length = 0;
-my $line = <$fh>;
-chomp($line);
 
+chomp($line);
 if( $line =~ /\s*0:d=0.*hl=([0-9]+)\s+l=\s*(inf|[0-9]+)/ ) {
     $header_length = int($1);
     $length = int($2);
