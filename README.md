@@ -185,15 +185,58 @@ is the second sequence. It is located at the third byte in the original
 encoded file. The header preceding the data is encoded using 4 bytes and the
 data account for 567 bytes for this sequence.
 
-### Output & Return Code
+### Output & Return Codes
 
 The template is printed on STDOUT, error messages are printed on STDERR, if
 any.
 
 Return codes:
 - ```0```: Success.
-- ```1```: Unparseable line encountered.
-- ```2```: Indefinite length encoding detected.
+- ```1```: Command line arguments error.
+- ```2```: Unparseable line encountered.
+- ```3```: Indefinite length encoding detected.
+
+### Multi-root data structures
+
+The ```asn1parse``` OpenSSL app is able to read concatenated DER structures as
+if it was a single structure. The result is a dump with multiple objects at
+depth 0.
+
+Here is an example of such structure:
+
+```
+$ openssl asn1parse -in TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der -inform D -i
+    0:d=0  hl=3 l= 159 cons: cont [ 0 ]
+[...]
+  162:d=0  hl=4 l= 775 cons: cont [ 16 ]
+[...]
+  941:d=0  hl=2 l=  40 cons: cont [ 3 ]
+[...]
+  983:d=0  hl=2 l=  76 cons: cont [ 2 ]
+[...]
+ 1061:d=0  hl=4 l= 531 cons: cont [ 18 ]
+[...]
+```
+
+The ```-genconf``` option of the ```asn1parse``` OpenSSL app is not able to
+generate such multi-root structures. In order to deal with this issue, the
+```asn1template.pl``` command, with its ```--multi-root``` option, produces a
+template that wraps the concatenated structures into a top level SEQUENCE.
+This wrapping sequence can then be stripped using the ```unwrap_multiroot.pl```
+command after template edition.
+
+Here is a full example, based on an eSIM test file
+(coming from https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/):
+
+```
+$ ./asn1template.pl --multi-root TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der > TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl
+$ openssl asn1parse -genconf TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl -out TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
+$ ./unwrap_multiroot.pl TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
+Output written to file "TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped".
+$ diff TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped
+$ echo $?
+0
+```
 
 ## Limitations
 

@@ -17,11 +17,12 @@ chomp($openssl);
 ####
 
 my $ftype = 'D';
+my $multiroot = 0;
 my $error_detected = 0;
 
 sub print_usage {
     print "Usage:\n";
-    print "\t$0 [--pem|-p] <encoded_file>\n\n";
+    print "\t$0 [--pem|-p] [--multi-root|m] <encoded_file>\n\n";
     print "Default input file format is DER, use --pem or -p option to switch to PEM\n\n";
     exit 1
 }
@@ -46,6 +47,18 @@ sub parse_file {
     while(<$fh>) {
         $line_number++;
         chomp;
+
+        if($multiroot) {
+            $multiroot = 0;
+            $indent_level = -1;
+            my $array_ref = [$ptr];
+            push @{$ptr}, 'SEQUENCE';
+            push @{$ptr}, 'cons';
+            push @{$ptr}, 'wrapping-seq';
+            push @{$ptr}, $array_ref;
+            $ptr = $array_ref;
+        }
+
         $prev_indent_level = $indent_level;
         if( /\s*([0-9]+):d=([0-9]+).*hl=([0-9]+)\s+l=\s*(inf|[0-9]+)\s+([a-z]+):\s*(<ASN1|cont|appl|priv)\s*\[?\s*([0-9]+)\s*[\]>]\s*/ ) {
             $offset = int($1);
@@ -65,13 +78,13 @@ sub parse_file {
             $data = $7 if defined($7);
         } else {
             print STDERR "Error could not parse input line #${line_number}!\n";
-            $error_detected = 1;
+            $error_detected = 2;
             next;
         }
 
         if($length == "Inf") {
             print STDERR "Indefinite length encoding detected at line #${line_number}\n";
-            $error_detected = 2;
+            $error_detected = 3;
         }
 
         for(my $i = 0; $i < $prev_indent_level - $indent_level; $i++) {
@@ -104,7 +117,7 @@ sub parse_file {
                     if($type eq 'BIT STRING' or $type =~ /^(cont|appl|priv|univ)\s+[0-9]+/) {
                         $data = "";
                         $data .= uc unpack "H*", $_ while(<$tmpfh>);
-                        $data = $data =~ /^00(.*)/ ? $1 : $data;
+                        $data = $data =~ /^00(.*)/ ? $1 : $data if($type eq 'BIT STRING');
                     } elsif ($type eq 'UTF8STRING') {
                         $data = <$tmpfh>;
                     } elsif ($type eq 'BMPSTRING') {
@@ -227,6 +240,7 @@ ${$asn1}[0] = $asn1;
 
 GetOptions(
     'pem|p'   => sub { $ftype = 'P' },
+    'multi-root|m'   => sub { $multiroot = 1 },
 ) or do { print_usage };
 
 do { print "Missing filename !\n\n"; print_usage } if (scalar @ARGV < 1);
