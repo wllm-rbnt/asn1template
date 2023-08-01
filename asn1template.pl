@@ -1,4 +1,20 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
+
+##
+## Copyright (c) 2022, 2023 William Robinet <willi@mrobi.net>
+##
+## Permission to use, copy, modify, and distribute this software for any
+## purpose with or without fee is hereby granted, provided that the above
+## copyright notice and this permission notice appear in all copies.
+##
+## THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+## WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+## MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+## ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+## WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+## ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+## OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+##
 
 use strict;
 use warnings;
@@ -22,8 +38,10 @@ my $error_detected = 0;
 
 sub print_usage {
     print "Usage:\n";
-    print "\t$0 [--pem|-p] [--multi-root|m] <encoded_file>\n\n";
-    print "Default input file format is DER, use --pem or -p option to switch to PEM\n\n";
+    print "\t$0 [--help|-h] [--pem|-p] [--multi-root|m] <encoded_file>\n\n";
+    print "Default input file format is DER, use --pem (or -p) option to switch to PEM\n";
+    print "Use --multi-root (or -m) option to process multiple concatenated structures from a single input file\n";
+    print "Use --help (or -h) to print this help message\n";
     exit 1
 }
 
@@ -239,6 +257,7 @@ my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
 GetOptions(
+    'help|h'   => sub { print_usage },
     'pem|p'   => sub { $ftype = 'P' },
     'multi-root|m'   => sub { $multiroot = 1 },
 ) or do { print_usage };

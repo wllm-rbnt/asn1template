@@ -3,14 +3,27 @@
 ## Description
 
 This tool takes a DER or PEM encoded ASN.1 structure and outputs the equivalent
-textual description that can be edited and later be fed to
-```ASN1_generate_nconf(3)``` in order to build the equivalent DER encoded ASN.1
-structure.
+textual description that can be edited and later be fed to OpenSSL's
+```ASN1_generate_nconf(3)``` function in order to build the equivalent DER
+encoded ASN.1 structure.
+The code is written in Perl with minimal dependencies. No compilation required.
 
-Here is an example. First, let's convert a PEM encoded certificate to a textual
-representation supported by ```ASN1_generate_nconf(3)```. The certificate we
-use in this example is a root CA certificate from Amazon. On Debian, it belongs
-to the ```ca-certificates``` package.
+```
+$ git clone https://github.com/wllm-rbnt/asn1template.git
+$ cd asn1template
+$ ./asn1template -h
+Usage:
+	./asn1template.pl [--help|-h] [--pem|-p] [--multi-root|m] <encoded_file>
+
+Default input file format is DER, use --pem (or -p) option to switch to PEM
+Use --multi-root (or -m) option to process multiple concatenated structures from a single input file
+Use --help (or -h) to print this help message
+```
+
+Here is an example of usage. First, let's convert a PEM encoded certificate to
+a textual representation supported by ```ASN1_generate_nconf(3)```. The
+certificate we use in this example is a root CA certificate from Amazon. On
+Debian, it belongs to the ```ca-certificates``` package.
 
 ```
 $ ./asn1template.pl --pem /etc/ssl/certs/Amazon_Root_CA_3.pem | tee Amazon_Root_CA_3.tpl
