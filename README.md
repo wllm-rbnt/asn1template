@@ -1,4 +1,4 @@
-# ASN.1 templating for fun and profit
+# ASN.1 templating
 
 ## Description
 
