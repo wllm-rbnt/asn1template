@@ -38,7 +38,7 @@ my $error_detected = 0;
 
 sub print_usage {
     print "Usage:\n";
-    print "\t$0 [--help|-h] [--pem|-p] [--multi-root|m] <encoded_file>\n\n";
+    print "\t$0 [--help|-h] [--pem|-p] [--multi-root|-m] <encoded_file>\n\n";
     print "Default input file format is DER, use --pem (or -p) option to switch to PEM\n";
     print "Use --multi-root (or -m) option to process multiple concatenated structures from a single input file\n";
     print "Use --help (or -h) to print this help message\n";

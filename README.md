@@ -13,7 +13,7 @@ $ git clone https://github.com/wllm-rbnt/asn1template.git
 $ cd asn1template
 $ ./asn1template -h
 Usage:
-	./asn1template.pl [--help|-h] [--pem|-p] [--multi-root|m] <encoded_file>
+	./asn1template.pl [--help|-h] [--pem|-p] [--multi-root|-m] <encoded_file>
 
 Default input file format is DER, use --pem (or -p) option to switch to PEM
 Use --multi-root (or -m) option to process multiple concatenated structures from a single input file
