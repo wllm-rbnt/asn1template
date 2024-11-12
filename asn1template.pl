@@ -188,7 +188,7 @@ sub dump_template {
                 $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
 
                 if($seqid == 1) {
-                    print "asn1 = $item:seq$seqid\@$seqlabel\n";
+                    print "asn1 = $item:se$stype$seqid\@$seqlabel\n";
                 } else {
                     print "field$fieldid\@$fieldlabel = $item:se".$stype."$seqid\@$seqlabel\n";
                 }
