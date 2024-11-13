@@ -159,7 +159,7 @@ my $indent_level_display;
 my $ptr_display;
 my $class;
 my ($fieldid, $fieldlabel);
-my ($seqid, $seqlabel);
+my ($sid, $slabel);
 my $stype_stack = [];
 ####
 
@@ -171,7 +171,7 @@ sub dump_template {
         my $item = ${$ptr_display}[$i];
         if(ref $item eq 'ARRAY') {
             push @{$queue}, $item;
-            push @{$queue}, "$seqid\@$seqlabel";
+            push @{$queue}, "$sid\@$slabel";
         } else {
             $i++;
             $fieldid++;
@@ -182,15 +182,15 @@ sub dump_template {
             if($class eq 'cons') {
                 my $stype = ($item =~ /^SE([QT])/) ? lc($1) : "q";
                 push @{$stype_stack}, $stype ;
-                $seqid++;
-                $seqlabel = ${$ptr_display}[$i];
+                $sid++;
+                $slabel = ${$ptr_display}[$i];
 
                 $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
 
-                if($seqid == 1) {
-                    print "asn1 = $item:se$stype$seqid\@$seqlabel\n";
+                if($sid == 1) {
+                    print "asn1 = $item:se$stype$sid\@$slabel\n";
                 } else {
-                    print "field$fieldid\@$fieldlabel = $item:se".$stype."$seqid\@$seqlabel\n";
+                    print "field$fieldid\@$fieldlabel = $item:se".$stype."$sid\@$slabel\n";
                 }
             } else {
                 $i++;
@@ -248,7 +248,7 @@ sub dump_template_wrapper {
     $ptr_display = shift;
     $indent_level_display = 0;
     $fieldid = 0;
-    $seqid = 0;
+    $sid = 0;
     dump_template();
     return
 }
