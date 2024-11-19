@@ -199,7 +199,11 @@ is the second sequence. It is located at the third byte in the original
 encoded file. The header preceding the data is encoded using 4 bytes and the
 data account for 567 bytes for this sequence.
 
-This can be disabled using '-s' option (or long version '--simple-labels').
+Complex labels can be disabled using '-s' option (or long version '--simple-labels').
+In this case labels will have the following form:
+```
+[type][id]
+```
 
 ### Output & Return Codes
 
