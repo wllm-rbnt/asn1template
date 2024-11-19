@@ -1,4 +1,4 @@
-# ASN.1 templating for fun and profit - Examples
+# ASN.1 templating - Examples
 
 ## Example #1 - DER Encoded Certificate
 
