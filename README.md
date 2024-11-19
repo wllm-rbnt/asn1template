@@ -13,10 +13,11 @@ $ git clone https://github.com/wllm-rbnt/asn1template.git
 $ cd asn1template
 $ ./asn1template -h
 Usage:
-	./asn1template.pl [--help|-h] [--pem|-p] [--multi-root|-m] <encoded_file>
+	./asn1template.pl [--help|-h] [--pem|-p] [--simple-labels|-s] [--multi-root|-m] <encoded_file>
 
 Default input file format is DER, use --pem (or -p) option to switch to PEM
 Use --multi-root (or -m) option to process multiple concatenated structures from a single input file
+Use --simple-labels (or -s) option to use simple numeric labels
 Use --help (or -h) to print this help message
 ```
 
@@ -197,6 +198,8 @@ seq2@3-4-567
 is the second sequence. It is located at the third byte in the original
 encoded file. The header preceding the data is encoded using 4 bytes and the
 data account for 567 bytes for this sequence.
+
+This can be disabled using '-s' option (or long version '--simple-labels').
 
 ### Output & Return Codes
 

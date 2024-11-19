@@ -34,13 +34,15 @@ chomp($openssl);
 
 my $ftype = 'D';
 my $multiroot = 0;
+my $simple_labels = 0;
 my $error_detected = 0;
 
 sub print_usage {
     print "Usage:\n";
-    print "\t$0 [--help|-h] [--pem|-p] [--multi-root|-m] <encoded_file>\n\n";
+    print "\t$0 [--help|-h] [--pem|-p] [--simple-labels|-s] [--multi-root|-m] <encoded_file>\n\n";
     print "Default input file format is DER, use --pem (or -p) option to switch to PEM\n";
     print "Use --multi-root (or -m) option to process multiple concatenated structures from a single input file\n";
+    print "Use --simple-labels (or -s) option to use simple numeric labels\n";
     print "Use --help (or -h) to print this help message\n";
     exit 1
 }
@@ -171,62 +173,62 @@ sub dump_template {
         my $item = ${$ptr_display}[$i];
         if(ref $item eq 'ARRAY') {
             push @{$queue}, $item;
-            push @{$queue}, "$sid\@$slabel";
+            push @{$queue}, "$sid$slabel";
         } else {
             $i++;
             $fieldid++;
             $class = ${$ptr_display}[$i];
             $i++;
-            $fieldlabel = ${$ptr_display}[$i];
+            $fieldlabel = ($simple_labels) ? '' : '@'.${$ptr_display}[$i];
 
             if($class eq 'cons') {
                 my $stype = ($item =~ /^SE([QT])/) ? lc($1) : "q";
                 push @{$stype_stack}, $stype ;
                 $sid++;
-                $slabel = ${$ptr_display}[$i];
+                $slabel = ($simple_labels) ? '' : '@'.${$ptr_display}[$i];
 
                 $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
 
                 if($sid == 1) {
-                    print "asn1 = $item:se$stype$sid\@$slabel\n";
+                    print "asn1 = $item:se$stype$sid$slabel\n";
                 } else {
-                    print "field$fieldid\@$fieldlabel = $item:se".$stype."$sid\@$slabel\n";
+                    print "field$fieldid$fieldlabel = $item:se".$stype."$sid$slabel\n";
                 }
             } else {
                 $i++;
 
                 if($item =~ /^([capu])[ontplriv]+\s+([0-9]+)/) {
                     my $hexfmt = (${$ptr_display}[$i] eq "") ? "" : ",FORMAT:HEX";
-                    print "field$fieldid\@$fieldlabel = IMPLICIT:$2".uc($1)."$hexfmt,OCTETSTRING:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = IMPLICIT:$2".uc($1)."$hexfmt,OCTETSTRING:${$ptr_display}[$i]\n";
                 } elsif($item eq 'NULL') {
-                    print "field$fieldid\@$fieldlabel = $item\n";
+                    print "field$fieldid$fieldlabel = $item\n";
                 } elsif ($item eq 'OCTET STRING') {
                     if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
-                        print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                        print "field$fieldid$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
                     } else {
-                        print "field$fieldid\@$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
+                        print "field$fieldid$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
                     }
                 } elsif ($item eq 'INTEGER') {
                     ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
-                    print "field$fieldid\@$fieldlabel = $item:0x$1\n";
+                    print "field$fieldid$fieldlabel = $item:0x$1\n";
                 } elsif ($item eq 'BOOLEAN') {
                     if(${$ptr_display}[$i] =~ /255/) {
-                        print "field$fieldid\@$fieldlabel = $item:true\n";
+                        print "field$fieldid$fieldlabel = $item:true\n";
                     } else {
-                        print "field$fieldid\@$fieldlabel = $item:false\n";
+                        print "field$fieldid$fieldlabel = $item:false\n";
                     }
                 } elsif ($item eq 'BIT STRING') {
-                    print "field$fieldid\@$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
                 } elsif ($item eq 'UTF8STRING') {
-                    print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                    print "field$fieldid$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                 } elsif ($item eq 'BMPSTRING') {
-                    print "field$fieldid\@$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                    print "field$fieldid$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
                 } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
-                    print "field$fieldid\@$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                    print "field$fieldid$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                 } elsif ($item eq 'EOC') {
-                    print "field$fieldid\@$fieldlabel = IMPLICIT:0U,PRINTABLESTRING:\"\"\n"
+                    print "field$fieldid$fieldlabel = IMPLICIT:0U,PRINTABLESTRING:\"\"\n"
                 } else {
-                    print "field$fieldid\@$fieldlabel = $item:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = $item:${$ptr_display}[$i]\n";
                 }
             }
         }
@@ -260,6 +262,7 @@ GetOptions(
     'help|h'   => sub { print_usage },
     'pem|p'   => sub { $ftype = 'P' },
     'multi-root|m'   => sub { $multiroot = 1 },
+    'simple-labels|s' => sub { $simple_labels = 1},
 ) or do { print_usage };
 
 do { print "Missing filename !\n\n"; print_usage } if (scalar @ARGV < 1);
