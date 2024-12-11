@@ -1,10 +1,9 @@
+name: tests
 on: [push]
 jobs:
-  test-single-cert:
+  all-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo | openssl s_client -connect www.google.com:443 2>/dev/null | openssl x509 -out www.google.com.der -outform D
-      - run: ./asn1template.pl www.google.com.der > www.google.com.tpl
-      - run: openssl asn1parse -genconf www.google.com.tpl -out www.google.com.tpl.der > /dev/null 2>&1
-      - run: diff www.google.com.der www.google.com.tpl.der
+      - run: cd tests
+      - run: ./run_tests.sh
