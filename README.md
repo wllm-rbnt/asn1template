@@ -258,6 +258,14 @@ $ echo $?
 0
 ```
 
+## Testing
+
+A mostly complete test script can be executed from project root:
+
+```
+$ ./tests/run_tests.sh
+```
+
 ## Limitations
 
 This script was written many years ago as a quick and dirty PoC. It was then
