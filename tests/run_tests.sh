@@ -2,6 +2,7 @@
 
 set -e
 
+cd tests
 mkdir -p certs crls smime esim
 
 echo "Testing certificates ..."
