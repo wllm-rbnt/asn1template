@@ -5,4 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ./tests/run_tests.sh
+      - run: ./tests/test_certs.sh
+      - run: ./tests/test_crls.sh
+      - run: ./tests/test_esim.sh
+      - run: ./tests/test_pkcs7.sh
