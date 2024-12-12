@@ -37,12 +37,6 @@ my $multiroot = 0;
 my $simple_labels = 0;
 my $error_detected = 0;
 
-my %offset_map = (
-    '93'    =>  "aaaaaaaaaaaaaaaaaaaaa",
-    '159'   =>  "bbbbbbbbbbbbbbbbbbbbb"
-);
-my $offset_map_ref = \%offset_map;
-
 sub print_usage {
     print "Usage:\n";
     print "\t$0 [--help|-h] [--pem|-p] [--simple-labels|-s] [--multi-root|-m] <encoded_file>\n\n";
@@ -154,9 +148,6 @@ sub parse_file {
                 } else {
                     $data = "";
                 }
-            }
-            if(exists $offset_map_ref->{$offset}) {
-                #                $data = $offset_map_ref->{$offset};
             }
             push @{$ptr}, $data if $type ne 'NULL';
         }
