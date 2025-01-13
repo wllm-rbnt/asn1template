@@ -1,5 +1,7 @@
 # ASN.1 templating
 
+[![tests](https://github.com/wllm-rbnt/asn1template/actions/workflows/tests.yml/badge.svg)](https://github.com/wllm-rbnt/asn1template/actions/workflows/tests.yml)
+
 ## Description
 
 This tool takes a DER or PEM encoded ASN.1 structure and outputs the equivalent
