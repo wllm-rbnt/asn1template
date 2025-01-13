@@ -2,8 +2,6 @@
 
 [![tests](https://github.com/wllm-rbnt/asn1template/actions/workflows/tests.yml/badge.svg)](https://github.com/wllm-rbnt/asn1template/actions/workflows/tests.yml)
 
-## Description
-
 This tool takes a DER or PEM encoded ASN.1 structure and outputs the equivalent
 textual description that can be edited and later be fed to OpenSSL's
 ```ASN1_generate_nconf(3)``` function in order to build the equivalent DER
@@ -274,8 +272,8 @@ This script was written many years ago as a quick and dirty PoC. It was then
 improved to support DER structures found in the wild (i.e. certificates).
 
 This tool has the same limitations as ```ASN1_generate_nconf(3)```:
- - it does not support indefinite length encoding, regular length encoding is
-   used instead. EOC tags are preserved.
+ - it does not support indefinite length encoding since DER forbids it, regular
+   length encoding is used instead. EOC tags are preserved.
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
    forbidden characters such as ```*```, ```@```, ```&``` or ```_```
@@ -287,13 +285,13 @@ Please refer to example #5 in [examples](EXAMPLES.md) section.
 
 Line feeds in OCTET STRINGs break the conversion.
 
-Unicode strings are sometimes broken and might require adjustments.
+Unicode strings are sometimes broken and might require manual adjustments.
 
 ENUM and some string types are not supported yet by ```asn1template.pl```.
 
 ## License
 
-Copyright (c) 2022-2024 William Robinet <willi@mrobi.net>
+Copyright (c) 2022-2025 William Robinet <willi@mrobi.net>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
