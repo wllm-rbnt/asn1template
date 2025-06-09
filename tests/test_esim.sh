@@ -8,7 +8,7 @@ mkdir -p esim
 echo "### Testing eSIM structures ..."
 cd ./esim
 rm -f ./*tpl* ./*der ./*unwrapped
-wget https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/raw/master/GSMA_TS48_eSIM_GTP_Profile_Package_v5.zip
+wget https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/raw/84ba342b654425c283e02a16c10d487f6201cd01/GSMA_TS48_eSIM_GTP_Profile_Package_v5.zip
 unzip GSMA_TS48_eSIM_GTP_Profile_Package_v5.zip \*der
 while read -r i; do
     echo -n "${i} ... "
