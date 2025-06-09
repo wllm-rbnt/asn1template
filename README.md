@@ -11,7 +11,7 @@ The code is written in Perl with minimal dependencies. No compilation required.
 ```
 $ git clone https://github.com/wllm-rbnt/asn1template.git
 $ cd asn1template
-$ ./asn1template -h
+$ ./asn1template.pl -h
 Usage:
 	./asn1template.pl [--help|-h] [--pem|-p] [--simple-labels|-s] [--multi-root|-m] <encoded_file>
 
