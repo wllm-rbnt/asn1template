@@ -215,6 +215,7 @@ Return codes:
 - ```1```: Command line arguments error.
 - ```2```: Unparseable line encountered.
 - ```3```: Indefinite length encoding detected.
+- ```4```: Unable to unwrap top-level SEQUENCE.
 
 ### Environment variables
 
@@ -266,9 +267,9 @@ $ openssl asn1parse -in TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der -inform D -
 The ```-genconf``` option of the ```asn1parse``` OpenSSL app is not able to
 generate such multi-root structures. In order to deal with this issue, the
 ```asn1template.pl``` command, with its ```--multi-root``` option, produces a
-template that wraps the concatenated structures into a top level SEQUENCE.
-This wrapping sequence can then be stripped using the ```unwrap_multiroot.pl```
-command after template edition.
+template that wraps the concatenated structures into a top-level SEQUENCE.
+This wrapping sequence can then be stripped using the ```--unwrap``` option
+after template edition.
 
 Here is a full example, based on an eSIM test file
 (coming from https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/):
@@ -276,8 +277,8 @@ Here is a full example, based on an eSIM test file
 ```console
 $ ./asn1template.pl --multi-root TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der > TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl
 $ openssl asn1parse -genconf TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl -out TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
-$ ./unwrap_multiroot.pl TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
-Output written to file "TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped".
+$ ./asn1template.pl --unwrap TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
+Output written to file "TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped" in DER format.
 $ diff TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped
 $ echo $?
 0

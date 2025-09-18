@@ -41,6 +41,7 @@ if ($ret) {
 my $ftype = 'D';
 my $multiroot = 0;
 my $simple_labels = 0;
+my $unwrap = 0;
 my $error_detected = 0;
 
 sub print_usage {
@@ -49,7 +50,9 @@ sub print_usage {
     print "Default input file format is DER, use --pem (or -p) option to switch to PEM\n";
     print "Use --multi-root (or -m) option to process multiple concatenated structures from a single input file\n";
     print "Use --simple-labels (or -s) option to use simple numeric labels\n";
-    print "Use --help (or -h) to print this help message\n";
+    print "Use --help (or -h) to print this help message\n\n";
+    print "Remove/Unwrap top-level SEQUENCE, use --pem (or -p) option to switch to PEM\n";
+    print "\t$0 [--pem|-p] [--unwrap|-u] <encoded_file>\n\n";
     exit 1
 }
 
@@ -261,6 +264,33 @@ sub dump_template_wrapper {
     return
 }
 
+sub root_unwrap {
+    my $srcfile = shift;
+    open(my$fh, "-|", "$openssl asn1parse -inform $ftype -in '$srcfile' 2>/dev/null")
+        or croak "Error opening source file !";
+    my $line = <$fh>;
+    close($fh);
+
+    my $header_length = 0;
+    my $length = 0;
+
+    chomp($line);
+    if( $line =~ /\s*0:d=0.*hl=([0-9]+)\s+l=\s*(inf|[0-9]+)/ ) {
+        $header_length = int($1);
+        $length = int($2);
+    } else {
+        print STDERR "Error could not parse input line !\n";
+        exit(4);
+    }
+
+    my $dstfile = $srcfile.".unwrapped";
+    system($openssl, 'asn1parse', '-in', $srcfile, '-inform', $ftype,
+        '-offset', $header_length, '-length', $length, '-noout', '-out', $dstfile);
+    close($fh);
+
+    print "Output written to file \"$dstfile\" in DER format.\n";
+}
+
 my $asn1 = [];
 ${$asn1}[0] = $asn1;
 
@@ -269,15 +299,20 @@ GetOptions(
     'pem|p'   => sub { $ftype = 'P' },
     'multi-root|m'   => sub { $multiroot = 1 },
     'simple-labels|s' => sub { $simple_labels = 1},
+    'unwrap|u' => sub { $unwrap = 1},
 ) or do { print_usage };
 
 do { print "Missing filename !\n\n"; print_usage } if (scalar @ARGV < 1);
 do { print "Too many arguments !\n\n"; print_usage } if (scalar @ARGV > 1);
 do { print "File does not exist !\n\n"; print_usage } if not -f "$ARGV[0]";
 
-parse_file($ARGV[0], $asn1);
-#dump($asn1);
-dump_template_wrapper($asn1);
+if ($unwrap) {
+    root_unwrap($ARGV[0]);
+} else {
+    parse_file($ARGV[0], $asn1);
+    #dump($asn1);
+    dump_template_wrapper($asn1);
+}
 
 exit $error_detected ;
 
