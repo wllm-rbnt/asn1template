@@ -18,6 +18,7 @@
 
 use strict;
 use warnings;
+use Env;
 ################
 # "apt install libdata-dump-perl"
 # or "dnf install perl-Data-Dump"
@@ -28,8 +29,13 @@ use File::Temp qw/:POSIX/;
 use Getopt::Long;
 
 # Path to the openssl binary
-my $openssl = `which openssl`;
+my $openssl = (exists $ENV{OPENSSL}) ? $ENV{OPENSSL} : `which openssl`;
+
 chomp($openssl);
+my $ret = system("$openssl version >/dev/null 2>&1");
+if ($ret) {
+    croak("'$openssl' is not a suitable openssl executable!");
+}
 ####
 
 my $ftype = 'D';

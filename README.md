@@ -216,6 +216,31 @@ Return codes:
 - ```2```: Unparseable line encountered.
 - ```3```: Indefinite length encoding detected.
 
+### Environment variables
+
+You can instruct ```asn1template.pl``` to use an alternate ```openssl``` binary
+by setting the OPENSSL environment variable.
+Note that, depending on your setup, you might want to reference or preload
+matching dynamic libraries such as ```libcrypto.so``` and ```libssl.so``` by
+setting LD_LIBRARY_PATH or LD_PRELOAD.
+
+```console
+$ export OPENSSL=/home/user/openssl-3.4.0/apps/openssl
+$ ${OPENSSL} version
+/home/user/openssl-3.4.0/apps/openssl: /lib/x86_64-linux-gnu/libssl.so.3: version `OPENSSL_3.4.0' not found (required by /home/user/openssl-3.4.0/apps/openssl)
+/home/user/openssl-3.4.0/apps/openssl: /lib/x86_64-linux-gnu/libssl.so.3: version `OPENSSL_3.2.0' not found (required by /home/user/openssl-3.4.0/apps/openssl)
+/home/user/openssl-3.4.0/apps/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version `OPENSSL_3.3.0' not found (required by /home/user/openssl-3.4.0/apps/openssl)
+/home/user/openssl-3.4.0/apps/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version `OPENSSL_3.4.0' not found (required by /home/user/openssl-3.4.0/apps/openssl)
+/home/user/openssl-3.4.0/apps/openssl: /lib/x86_64-linux-gnu/libcrypto.so.3: version `OPENSSL_3.2.0' not found (required by /home/user/openssl-3.4.0/apps/openssl)
+$ export LD_LIBRARY_PATH=/home/user/openssl-3.4.0
+$ ${OPENSSL} version
+OpenSSL 3.4.0 22 Oct 2024 (Library: OpenSSL 3.4.0 22 Oct 2024)
+$ ./asn1template.pl --pem /etc/ssl/certs/Amazon_Root_CA_3.pem | tee Amazon_Root_CA_3.tpl
+asn1 = SEQUENCE:seq1@0-4-438
+[seq1@0-4-438]
+[...]
+```
+
 ### Multi-root data structures
 
 The ```asn1parse``` OpenSSL app is able to read concatenated DER structures as
