@@ -14,6 +14,6 @@ while read -r i; do
     echo -n "${i} ... "
     ../../asn1template.pl -m "${i}" > "${i}.tpl"
     openssl asn1parse -genconf "${i}.tpl" -out "${i}.tpl.der" > /dev/null 2>&1
-    ../../unwrap_multiroot.pl "${i}.tpl.der"
+    ../../asn1template.pl -u "${i}.tpl.der"
     diff "${i}" "${i}.tpl.der.unwrapped" > /dev/null 2>&1 && echo "ok" || echo "not ok"
 done < <(ls -1 ./*der)
