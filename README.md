@@ -251,7 +251,7 @@ depth 0.
 Here is an example of such structure:
 
 ```console
-$ openssl asn1parse -in TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der -inform D -i
+$ openssl asn1parse -in 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der' -inform D -i
     0:d=0  hl=3 l= 159 cons: cont [ 0 ]
 [...]
   162:d=0  hl=4 l= 775 cons: cont [ 16 ]
@@ -275,11 +275,11 @@ Here is a full example, based on an eSIM test file
 (coming from https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/):
 
 ```console
-$ ./asn1template.pl --multi-root TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der > TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl
-$ openssl asn1parse -genconf TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl -out TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
-$ ./asn1template.pl --unwrap TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
+$ ./asn1template.pl --multi-root 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der' > 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl'
+$ openssl asn1parse -genconf 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl' -out 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der'
+$ ./asn1template.pl --unwrap 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der'
 Output written to file "TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped" in DER format.
-$ diff TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped
+$ diff 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der' 'TS48 V5.0 eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der.unwrapped'
 $ echo $?
 0
 ```
