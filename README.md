@@ -19,6 +19,9 @@ Default input file format is DER, use --pem (or -p) option to switch to PEM
 Use --multi-root (or -m) option to process multiple concatenated structures from a single input file
 Use --simple-labels (or -s) option to use simple numeric labels
 Use --help (or -h) to print this help message
+
+Remove/Unwrap top-level SEQUENCE, use --pem (or -p) option to switch to PEM
+	./asn1template.pl [--pem|-p] [--unwrap|-u] <encoded_file>
 ```
 
 Here is an example of usage. First, let's convert a PEM encoded certificate to
