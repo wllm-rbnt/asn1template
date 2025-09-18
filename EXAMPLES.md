@@ -4,24 +4,24 @@
 
 Take an arbitrary DER encoded certificate:
 
-```bash
+```console
 $ wget -o /dev/null https://pki.goog/repo/certs/gtsr1.der
 ```
 
 Convert it to an ASN1_generate_nconf(3) compatible textual description:
 
-```bash
+```console
 $ ./asn1template.pl gtsr1.der > gtsr1.tpl
 ```
 
 Convert it back to DER encoded ASN.1 with ASN1_generate_nconf(3):
 
-```bash
+```console
 $ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.der
 ```
 
 Original and recreated DER files are identical:
-```bash
+```console
 $ diff gtsr1.der gtsr1_new.der 
 $ echo $?
 0
@@ -34,17 +34,17 @@ https://github.com/drago-96/CVE-2022-0778 and this particular PR
 https://github.com/drago-96/CVE-2022-0778/pull/4 .
 
 Following the details presented in https://github.com/drago-96/CVE-2022-0778/pull/4 , first, generate a new EC private key:
-```bash
+```console
 $ openssl ecparam -out ec.key -name prime256v1 -genkey -noout -param_enc explicit -conv_form compressed
 ```
 
 Then use it to generate a self signed certificate:
-```bash
+```console
 $ openssl req -new -x509 -key ec.key -out cert.der -outform DER -days 360 -subj "/CN=TEST/"
 ```
 
 We can then generate a template from this certificate:
-```bash
+```console
 $ ./asn1template.pl cert.der > cert.tpl
 $ cat cert.tpl
 asn1 = SEQUENCE:seq1@0-4-583
@@ -123,7 +123,7 @@ field51@503-2-8 = OBJECT:ecdsa-with-SHA256
 ```
 
 Change some of the values in the template according to https://github.com/drago-96/CVE-2022-0778 and https://github.com/drago-96/CVE-2022-0778/pull/4 :
-```bash
+```console
 $ diff -u cert.tpl cert_new.tpl
 --- cert.tpl	2022-08-18 15:42:00.593000000 +0200
 +++ cert_new.tpl	2022-08-18 15:44:01.220000000 +0200
@@ -146,13 +146,13 @@ $ diff -u cert.tpl cert_new.tpl
 ```
 
 Then convert the template back to DER encoded ASN.1:
-```bash
+```console
 $ openssl asn1parse -genconf cert_new.tpl -noout -out cert_new.der
 
 ```
 
 Finally, try to display this certificate with a CVE-2022-0778 vulnerable OpenSSL installation:
-```bash
+```console
 $ openssl x509 -inform DER -in cert_new.der -noout -text
 ```
 
@@ -161,7 +161,7 @@ $ openssl x509 -inform DER -in cert_new.der -noout -text
 It works on certificates, but, more generally, on arbitrary DER encoded ASN.1
 blobs. Here is the same as example #1 but with a CRL file:
 
-```bash
+```console
 $ wget -o /dev/null https://crl.pki.goog/gtsr1/gtsr1.crl
 $ ./asn1template.pl gtsr1.crl > gtsr1.tpl
 $ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.crl
@@ -172,7 +172,7 @@ $ echo $?
 
 Or with an smime.p7s email signature taken from https://datatracker.ietf.org/doc/html/rfc4134 (page 87):
 
-```bash
+```console
 $ cat <<EOF > smime.p7s.base64
 MIIDdwYJKoZIhvcNAQcCoIIDaDCCA2QCAQExCTAHBgUrDgMCGjALBgkqhkiG9w0BBwGgggL
 gMIIC3DCCApugAwIBAgICAMgwCQYHKoZIzjgEAzASMRAwDgYDVQQDEwdDYXJsRFNTMB4XDT
@@ -204,29 +204,29 @@ $ echo $?
 
 It also works with PEM files:
 
-```bash
+```console
 $ wget -o /dev/null https://pki.goog/repo/certs/gtsr1.pem
 ```
 
 Convert it to an ASN1_generate_nconf(3) compatible textual description:
 
-```bash
+```console
 $ ./asn1template.pl --pem gtsr1.pem > gtsr1.tpl
 ```
 
 Convert it back to DER encoded ASN.1 with ASN1_generate_nconf(3):
 
-```bash
+```console
 $ openssl asn1parse -genconf gtsr1.tpl -noout -out gtsr1_new.der
 ```
 
 Then back to PEM:
-```bash
+```console
 $ openssl x509 -inform DER -in gtsr1_new.der -outform PEM -out gtsr1_new.pem
 ```
 
 Original and recreated PEM files are identical:
-```bash
+```console
 $ diff gtsr1.pem gtsr1_new.pem
 $ echo $?
 0
@@ -236,7 +236,7 @@ $ echo $?
 Let's consider the following configuration template that contains an explicit
 tag definition:
 
-```bash
+```console
 $ cat test.tpl
 asn1 = SEQUENCE:seq1
 [seq1]
@@ -244,7 +244,7 @@ field1 = EXPLICIT:0A,IA5STRING:Hello World
 ```
 
 We can generate the corresponding DER encoded file:
-```bash
+```console
 $ openssl asn1parse -genconf test.tpl -out test.der
     0:d=0  hl=2 l=  15 cons: SEQUENCE          
     2:d=1  hl=2 l=  13 cons: appl [ 0 ]        
@@ -252,7 +252,7 @@ $ openssl asn1parse -genconf test.tpl -out test.der
 ```
 
 The DER encoded file can be read with the asn1parse OpenSSL app:
-```bash
+```console
 $ openssl asn1parse -in test.der -i -inform D
     0:d=0  hl=2 l=  15 cons: SEQUENCE          
     2:d=1  hl=2 l=  13 cons:  appl [ 0 ]        
@@ -263,7 +263,7 @@ We can see the entry point sequence (seq1) followed by a tagged sequence (appl
 [ 0 ]) containing the IA5STRING.
 
 The template can then be extracted from the DER encoded file:
-```bash
+```console
 $ ./asn1template.pl test.der | tee test2.tpl
 asn1 = SEQUENCE:seq1@0-2-15
 [seq1@0-2-15]
@@ -274,7 +274,7 @@ field3@4-2-11 = IA5STRING:"Hello\ World"
 We can see that the explicit tag has been replaced by an implicitly tagged sequence (seq2).
 
 This template can finally be used to generate the associated DER encode file:
-```bash
+```console
 $ openssl asn1parse -genconf test2.tpl -out test2.der 
     0:d=0  hl=2 l=  15 cons: SEQUENCE          
     2:d=1  hl=2 l=  13 cons: appl [ 0 ]        
@@ -284,7 +284,7 @@ $ openssl asn1parse -genconf test2.tpl -out test2.der
 Both DER encoded files are identical. ```test.der``` originates from a
 configuration template with an explicit tag, ```test2.der``` originates from an
 equivalent configuration template containing an implicit tag:
-```bash
+```console
 $ diff test.der test2.der
 $ echo $?
 0

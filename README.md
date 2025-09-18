@@ -8,7 +8,7 @@ textual description that can be edited and later be fed to OpenSSL's
 encoded ASN.1 structure.
 The code is written in Perl with minimal dependencies. No compilation required.
 
-```
+```console
 $ git clone https://github.com/wllm-rbnt/asn1template.git
 $ cd asn1template
 $ ./asn1template.pl -h
@@ -26,7 +26,7 @@ a textual representation supported by ```ASN1_generate_nconf(3)```. The
 certificate we use in this example is a root CA certificate from Amazon. On
 Debian, it belongs to the ```ca-certificates``` package.
 
-```
+```console
 $ ./asn1template.pl --pem /etc/ssl/certs/Amazon_Root_CA_3.pem | tee Amazon_Root_CA_3.tpl
 asn1 = SEQUENCE:seq1@0-4-438
 [seq1@0-4-438]
@@ -125,13 +125,13 @@ convert this template back to its original form using
 ```ASN1_generate_nconf(3)```.  This is done in 2 steps, first convert it to a
 DER encoded file, then convert this DER file to PEM format:
 
-```
+```console
 $ openssl asn1parse -genconf Amazon_Root_CA_3.tpl -out Amazon_Root_CA_3_new.der
 $ openssl x509 -in Amazon_Root_CA_3_new.der -out Amazon_Root_CA_3_new.pem -outform PEM
 ```
 
 We can see that the original file and the one we regenerated are identical:
-```
+```console
 $ diff -u /etc/ssl/certs/Amazon_Root_CA_3.pem Amazon_Root_CA_3_new.pem
 $ echo $?
 0
@@ -148,7 +148,7 @@ an internal structure that is then dumped to the equivalent
 The syntax of this textual representation is documented in the man page of
 ```ASN1_generate_nconf(3)```:
 
-```bash
+```console
 $ man 3 ASN1_generate_nconf
 ```
 
@@ -249,7 +249,7 @@ depth 0.
 
 Here is an example of such structure:
 
-```
+```console
 $ openssl asn1parse -in TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der -inform D -i
     0:d=0  hl=3 l= 159 cons: cont [ 0 ]
 [...]
@@ -273,7 +273,7 @@ command after template edition.
 Here is a full example, based on an eSIM test file
 (coming from https://github.com/GSMATerminals/Generic-eUICC-Test-Profile-for-Device-Testing-Public/):
 
-```
+```console
 $ ./asn1template.pl --multi-root TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der > TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl
 $ openssl asn1parse -genconf TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl -out TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
 $ ./unwrap_multiroot.pl TS48\ V5.0\ eSIM_GTP_SAIP2.3_BERTLV_SUCI.der.tpl.der
@@ -287,7 +287,7 @@ $ echo $?
 
 A mostly complete test script can be executed from project root:
 
-```
+```console
 $ ./tests/run_tests.sh
 ```
 
