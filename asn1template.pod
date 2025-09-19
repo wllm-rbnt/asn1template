@@ -70,7 +70,7 @@ setting C<LD_LIBRARY_PATH> or C<LD_PRELOAD> environment variables.
 
 =head1 SEE ALSO
 
-L<openssl-asn1parse(1ossl)>, L<ASN1_generate_nconf(3)>
+L<openssl-asn1parse(1)>, L<ASN1_generate_nconf(3)>
 
 =head1 AUTHOR
 
