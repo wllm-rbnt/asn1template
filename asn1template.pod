@@ -1,0 +1,79 @@
+
+=head1 NAME
+
+asn1template - Convert encoded ASN.1 structures into OpenSSL's
+ASN1_generate_nconf(3) configuration format
+
+=head1 SYNOPSIS
+
+    asn1template [-h] [-p] [-s] [-m] FileName
+    asn1template [-u] [-p] FileName
+
+Examples:
+
+    asn1template DER_File
+
+    asn1template -p PEM_File
+
+    asn1template -p -s PEM_File
+
+    asn1template -m DER_File
+
+    asn1template -h
+
+    asn1template -u DER_File
+
+    asn1template -u -p PEM_File
+
+=head1 DESCRIPTION
+
+B<asn1template> takes a DER or PEM encoded ASN.1 structure and outputs the
+equivalent textual description that can be edited and later be fed to OpenSSL's
+ASN1_generate_nconf(3) function in order to build the equivalent DER encoded
+ASN.1 structure.
+
+=head1 OPTIONS
+
+=over 5
+
+=item B<-h|--help>
+
+Print out a brief B<h>elp message.
+
+=item B<-p|--pem>
+
+Switch input file format to B<P>EM, default is DER.
+
+=item B<-s|--simple-labels>
+
+Print B<s>imple numeric labels instead of full labels composed of offset, header
+length and content length.
+
+=item B<-m|--multi-root>
+
+Process B<m>ultiple concatenated encoded structures from a single input file.
+
+=item B<-u|--unwrap>
+
+B<U>nwrap top-level SEQUENCE.
+
+=back
+
+=head1 ENVIRONMENT
+
+B<asn1template> can be instructed to use an alternate B<openssl> binary by
+setting the C<OPENSSL> environment variable.
+
+I<Note>: depending on your setup, you might want to reference or preload
+matching dynamic libraries such as B<libcrypto.so.X> and B<libssl.so.X> by
+setting C<LD_LIBRARY_PATH> or C<LD_PRELOAD> environment variables.
+
+=head1 SEE ALSO
+
+L<openssl-asn1parse(1ssl)>, L<ASN1_generate_nconf(3)>
+
+=head1 AUTHOR
+
+Maintainer: William Robinet B<< <willi@mrobi.net> >>
+
+=cut
