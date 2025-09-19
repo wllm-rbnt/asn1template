@@ -2,7 +2,7 @@
 =head1 NAME
 
 asn1template - Convert encoded ASN.1 structures into OpenSSL's
-ASN1_generate_nconf(3) configuration format
+L<ASN1_generate_nconf(3)> configuration format
 
 =head1 SYNOPSIS
 
@@ -29,7 +29,7 @@ Examples:
 
 B<asn1template> takes a DER or PEM encoded ASN.1 structure and outputs the
 equivalent textual description that can be edited and later be fed to OpenSSL's
-ASN1_generate_nconf(3) function in order to build the equivalent DER encoded
+L<ASN1_generate_nconf(3)> function in order to build the equivalent DER encoded
 ASN.1 structure.
 
 =head1 OPTIONS
