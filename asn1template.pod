@@ -6,24 +6,8 @@ L<ASN1_generate_nconf(3)> configuration format
 
 =head1 SYNOPSIS
 
-    asn1template [-h] [-p] [-s] [-m] FileName
-    asn1template [-u] [-p] FileName
-
-Examples:
-
-    asn1template DER_File
-
-    asn1template -p PEM_File
-
-    asn1template -p -s PEM_File
-
-    asn1template -m DER_File
-
-    asn1template -h
-
-    asn1template -u DER_File
-
-    asn1template -u -p PEM_File
+    asn1template [-h] [-p] [-s] [-m] filename
+    asn1template [-u] [-p] filename
 
 =head1 DESCRIPTION
 
@@ -59,6 +43,37 @@ B<U>nwrap top-level SEQUENCE.
 
 =back
 
+=head1 EXAMPLES
+
+Convert a DER encoded file:
+
+    asn1template DER_file
+
+Convert a PEM encoded file:
+
+    asn1template -p PEM_file
+
+Convert a PEM encoded file using simplified labels:
+
+    asn1template -p -s PEM_file
+
+Convert a multi-root DER encoded file:
+
+    asn1template -m DER_file
+
+Unwrap top-level SEQUENCE from DER encoded file:
+
+    asn1template -u DER_file
+
+Unwrap top-level SEQUENCE from PEM encoded file:
+
+    asn1template -u -p PEM_file
+
+
+Print usage information:
+
+    asn1template -h
+
 =head1 ENVIRONMENT
 
 B<asn1template> can be instructed to use an alternate B<openssl> binary by
@@ -74,6 +89,6 @@ L<openssl-asn1parse(1)>, L<ASN1_generate_nconf(3)>
 
 =head1 AUTHOR
 
-Maintainer: William Robinet B<< <willi@mrobi.net> >>
+asn1template was written William Robinet <willi@mrobi.net>
 
 =cut
