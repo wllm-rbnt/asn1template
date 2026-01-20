@@ -9,3 +9,4 @@ jobs:
       - run: ./tests/test_crls.sh
       - run: ./tests/test_esim.sh
       - run: ./tests/test_pkcs7.sh
+      - run: ./tests/test_misc.sh
