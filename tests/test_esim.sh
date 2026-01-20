@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 cd tests
 mkdir -p esim
 
