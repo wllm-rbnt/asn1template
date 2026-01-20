@@ -171,17 +171,18 @@ my $ptr_display;
 my $class;
 my ($fieldid, $fieldlabel);
 my ($sid, $slabel);
-my $stype_stack = [];
 ####
 
 sub dump_template;
 sub dump_template {
     my $length = scalar @{$ptr_display};
     my $queue = [];
+    my $stype;
     for(my $i = 1; $i < $length; $i++) {
         my $item = ${$ptr_display}[$i];
         if(ref $item eq 'ARRAY') {
             push @{$queue}, $item;
+            push @{$queue}, $stype;
             push @{$queue}, "$sid$slabel";
         } else {
             $i++;
@@ -191,8 +192,8 @@ sub dump_template {
             $fieldlabel = ($simple_labels) ? '' : '@'.${$ptr_display}[$i];
 
             if($class eq 'cons') {
-                my $stype = ($item =~ /^SE([QT])/) ? lc($1) : "q";
-                push @{$stype_stack}, $stype ;
+                $stype = ($item =~ /^SE([QT])/) ? lc($1) : "q";
+
                 $sid++;
                 $slabel = ($simple_labels) ? '' : '@'.${$ptr_display}[$i];
 
@@ -244,8 +245,8 @@ sub dump_template {
     }
     while (scalar @{$queue} > 0) {
         $ptr_display = shift((@{$queue}));
+        my $stype = shift((@{$queue}));
         my $tmpseqref = shift((@{$queue}));
-        my $stype = pop(@{$stype_stack});
         print "[se$stype$tmpseqref]\n";
         $indent_level_display++;
         dump_template();
