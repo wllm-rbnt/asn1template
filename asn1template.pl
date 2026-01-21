@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 
 ##
-## Copyright (c) 2022-2025 William Robinet <willi@mrobi.net>
+## Copyright (c) 2022-2026 William Robinet <willi@mrobi.net>
 ##
 ## Permission to use, copy, modify, and distribute this software for any
 ## purpose with or without fee is hereby granted, provided that the above
