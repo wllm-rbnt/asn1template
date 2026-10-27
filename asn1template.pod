@@ -16,13 +16,6 @@ equivalent textual description that can be edited and later be fed to OpenSSL's
 L<ASN1_generate_nconf(3)> function in order to build the equivalent DER encoded
 ASN.1 structure.
 
-Indefinite length encoded structures (BER) are supported: they are described
-as constructed OCTET STRINGs concatenating the original header bytes, the
-OCTWRAP'ed children and the EOC tags. The generated top-level OCTET STRING
-header must then be skipped using the B<-offset> option of
-L<openssl-asn1parse(1)>, the required value is printed on stderr and as a
-comment on the first line of the template. The exit status is 3 in this case.
-
 =head1 OPTIONS
 
 =over 5
@@ -94,6 +87,15 @@ setting the C<OPENSSL> environment variable.
 I<Note>: depending on your setup, you might want to reference or preload
 matching dynamic libraries such as B<libcrypto.so.X> and B<libssl.so.X> by
 setting C<LD_LIBRARY_PATH> or C<LD_PRELOAD> environment variables.
+
+=head1 NOTES
+
+Indefinite length encoded structures (BER) are supported: they are described
+as constructed OCTET STRINGs concatenating the original header bytes, the
+OCTWRAP'ed children and the EOC tags. The generated top-level OCTET STRING
+header must then be skipped using the B<-offset> option of
+L<openssl-asn1parse(1)>, the required value is printed on stderr and as a
+comment on the first line of the template. The exit status is 3 in this case.
 
 =head1 SEE ALSO
 
