@@ -300,31 +300,31 @@ $ ./tests/run_tests.sh
 This script was written many years ago as a quick and dirty PoC. It was then
 improved to support DER structures found in the wild (i.e. certificates).
 
-This tool has the same limitations as ```ASN1_generate_nconf(3)```:
- - DER forbids indefinite length encoding. When indefinite length encoding is
-   detected, the affected structures (and their ancestors) are rebuilt as
-   constructed OCTET STRINGs (```IMPLICIT:4U,SEQUENCE```) whose parts are
-   concatenated: the original header bytes (e.g. ```3080```), each child wrapped
-   with ```OCTWRAP``` and the EOC tags. The resulting top-level OCTET STRING
-   header is then skipped using the ```-offset``` option printed by the tool
-   (also written as a comment on the first line of the template): ```openssl
-   asn1parse -genconf <template> -offset <n> -noout -out <output>```.  Header
-   bytes of these structures are hardcoded, definite lengths of ancestors must be
-   adjusted manually if their content is edited.
- - it might produce a template that is not supported by ASN1_generate_nconf(3),
-   this is the case with some CN encoded as PrintableString that contain
-   forbidden characters such as ```*```, ```@```, ```&``` or ```_```
-   (https://en.wikipedia.org/wiki/PrintableString).
+This tool has the same limitations as ```ASN1_generate_nconf(3)```. It might
+produce a template that is not supported by ```ASN1_generate_nconf(3)```, this
+is the case with some CN encoded as PrintableString that contain forbidden
+characters such as ```*```, ```@```, ```&``` or ```_```
+(https://en.wikipedia.org/wiki/PrintableString).
 
 It will not output explicit tags as is, instead it will output a combination of
 implicit tags and sequences that will ultimately produce an equivalent output.
 Please refer to example #5 in [examples](EXAMPLES.md) section.
 
+DER forbids indefinite length encoding. When indefinite length encoding is
+detected, the affected structures (and their ancestors) are rebuilt as
+constructed OCTET STRINGs (```IMPLICIT:4U,SEQUENCE```) whose parts are
+concatenated: the original header bytes (e.g. ```3080```), each child wrapped
+with ```OCTWRAP``` and the EOC tags. The resulting top-level OCTET STRING
+header is then skipped using the ```-offset``` option printed by the tool (also
+written as a comment on the first line of the template): ```openssl asn1parse
+-genconf <template> -offset <n> -noout -out <output>```.
+Please refer to example #6 in [examples](EXAMPLES.md) section.
+
 Line feeds in OCTET STRINGs break the conversion.
 
 Unicode strings are sometimes broken and might require manual adjustments.
 
-ENUM and some string types are not supported yet by ```asn1template.pl```.
+ENUM and some string types are not supported yet.
 
 ## License
 
