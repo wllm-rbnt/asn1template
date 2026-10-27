@@ -7,7 +7,7 @@ echo "### Testing CRLs ..."
 cd ./crls
 rm -f ./*tpl* ./*crl
 wget http://geant.crl.sectigo.com/GEANTOVRSACA4.crl -O GEANTOVRSACA4.crl
-wget http://crls.pki.goog/gts1c3/fVJxbV-Ktmk.crl -O fVJxbV-Ktmk.crl
+wget http://c.pki.goog/we2/dTM3-0hpWfE.crl -O dTM3-0hpWfE.crl
 
 for i in ./*crl; do
     echo -n "${i} ... "
