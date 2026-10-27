@@ -43,6 +43,9 @@ my $multiroot = 0;
 my $simple_labels = 0;
 my $unwrap = 0;
 my $error_detected = 0;
+my %collector;
+my %header;
+my $end_offset = 0;
 
 sub print_usage {
     print "Usage:\n";
@@ -115,6 +118,8 @@ sub parse_file {
             print STDERR "Indefinite length encoding detected at line #${line_number}\n";
             $error_detected = 3;
         }
+        my $end = $offset + $header_length + (($length == "Inf") ? 0 : $length);
+        $end_offset = $end if $end > $end_offset;
 
         for(my $i = 0; $i < $prev_indent_level - $indent_level; $i++) {
             $ptr = ${$ptr}[0];
@@ -126,6 +131,13 @@ sub parse_file {
             push @{$ptr}, $class;
             push @{$ptr}, "$offset-$header_length-$length";
             push @{$ptr}, $array_ref;
+            $header{$array_ref} = [$offset, $header_length];
+            if($length == "Inf") {
+                for(my $p = $array_ref; !exists $collector{$p}; $p = ${$p}[0]) {
+                    $collector{$p} = 1;
+                    last if ${$p}[0] == $p;
+                }
+            }
             $ptr = $array_ref if $length > 0;
         } else {
             push @{$ptr}, $type;
@@ -178,6 +190,12 @@ sub dump_template {
     my $length = scalar @{$ptr_display};
     my $queue = [];
     my $stype;
+    my $wrap = (exists $collector{$ptr_display}) ? 'OCTWRAP,' : '';
+    if($wrap and exists $header{$ptr_display}) {
+        $fieldid++;
+        my ($hoffset, $hlength) = @{$header{$ptr_display}};
+        print "field$fieldid".(($simple_labels) ? '' : "\@$hoffset-header")." = FORMAT:HEX,OCTETSTRING:".get_bytes_hex($hoffset, $hlength)."\n";
+    }
     for(my $i = 1; $i < $length; $i++) {
         my $item = ${$ptr_display}[$i];
         if(ref $item eq 'ARRAY') {
@@ -198,6 +216,8 @@ sub dump_template {
                 $slabel = ($simple_labels) ? '' : '@'.${$ptr_display}[$i];
 
                 $item = "IMPLICIT:$2".uc($1).",SEQUENCE" if $item =~ /^([capu])[ontplriv]+\s+([0-9]+)/;
+                $item = $wrap.$item;
+                $item = "IMPLICIT:4U,SEQUENCE" if exists $collector{${$ptr_display}[$i+1]};
 
                 if($sid == 1) {
                     print "asn1 = $item:se$stype$sid$slabel\n";
@@ -209,36 +229,36 @@ sub dump_template {
 
                 if($item =~ /^([capu])[ontplriv]+\s+([0-9]+)/) {
                     my $hexfmt = (${$ptr_display}[$i] eq "") ? "" : ",FORMAT:HEX";
-                    print "field$fieldid$fieldlabel = IMPLICIT:$2".uc($1)."$hexfmt,OCTETSTRING:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = ${wrap}IMPLICIT:$2".uc($1)."$hexfmt,OCTETSTRING:${$ptr_display}[$i]\n";
                 } elsif($item eq 'NULL') {
-                    print "field$fieldid$fieldlabel = $item\n";
+                    print "field$fieldid$fieldlabel = $wrap$item\n";
                 } elsif ($item eq 'OCTET STRING') {
                     if(${$ptr_display}[$i] =~ /\:([A-F0-9]+)/) {
-                        print "field$fieldid$fieldlabel = FORMAT:HEX,"."OCTETSTRING:$1\n";
+                        print "field$fieldid$fieldlabel = ${wrap}FORMAT:HEX,"."OCTETSTRING:$1\n";
                     } else {
-                        print "field$fieldid$fieldlabel = OCTETSTRING:".${$ptr_display}[$i]."\n";
+                        print "field$fieldid$fieldlabel = ${wrap}OCTETSTRING:".${$ptr_display}[$i]."\n";
                     }
                 } elsif ($item eq 'INTEGER') {
                     ${$ptr_display}[$i] =~ /^(-?[A-F0-9]+)/;
-                    print "field$fieldid$fieldlabel = $item:0x$1\n";
+                    print "field$fieldid$fieldlabel = $wrap$item:0x$1\n";
                 } elsif ($item eq 'BOOLEAN') {
                     if(${$ptr_display}[$i] =~ /255/) {
-                        print "field$fieldid$fieldlabel = $item:true\n";
+                        print "field$fieldid$fieldlabel = $wrap$item:true\n";
                     } else {
-                        print "field$fieldid$fieldlabel = $item:false\n";
+                        print "field$fieldid$fieldlabel = $wrap$item:false\n";
                     }
                 } elsif ($item eq 'BIT STRING') {
-                    print "field$fieldid$fieldlabel = FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = ${wrap}FORMAT:HEX,"."BITSTRING:${$ptr_display}[$i]\n";
                 } elsif ($item eq 'UTF8STRING') {
-                    print "field$fieldid$fieldlabel = FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                    print "field$fieldid$fieldlabel = ${wrap}FORMAT:UTF8,"."UTF8String:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                 } elsif ($item eq 'BMPSTRING') {
-                    print "field$fieldid$fieldlabel = FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
+                    print "field$fieldid$fieldlabel = ${wrap}FORMAT:UTF8,"."BMPSTRING:\"${$ptr_display}[$i]\"\n";
                 } elsif ($item eq 'PRINTABLESTRING' or $item eq 'T61STRING' or $item eq 'IA5STRING') {
-                    print "field$fieldid$fieldlabel = $item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
+                    print "field$fieldid$fieldlabel = $wrap$item:\"".quotemeta(${$ptr_display}[$i])."\"\n";
                 } elsif ($item eq 'EOC') {
-                    print "field$fieldid$fieldlabel = IMPLICIT:0U,PRINTABLESTRING:\"\"\n"
+                    print "field$fieldid$fieldlabel = ${wrap}IMPLICIT:0U,PRINTABLESTRING:\"\"\n"
                 } else {
-                    print "field$fieldid$fieldlabel = $item:${$ptr_display}[$i]\n";
+                    print "field$fieldid$fieldlabel = $wrap$item:${$ptr_display}[$i]\n";
                 }
             }
         }
@@ -256,11 +276,33 @@ sub dump_template {
     return
 }
 
+sub get_bytes_hex {
+    my ($boffset, $blength) = @_;
+    my $tmp_filename = tmpnam();
+    system($openssl, 'asn1parse', '-in', $ARGV[0], '-inform', $ftype,
+        (($boffset > 0) ? ('-offset', $boffset) : ()), '-length', $blength, '-noout', '-out', $tmp_filename);
+    open(my $tmpfh, "<", $tmp_filename)
+        or croak "Error opening tmp file!";
+    binmode($tmpfh);
+    local $/;
+    my $bytes = uc unpack "H*", <$tmpfh>;
+    close($tmpfh);
+    unlink $tmp_filename;
+    return $bytes;
+}
+
 sub dump_template_wrapper {
     $ptr_display = shift;
     $indent_level_display = 0;
     $fieldid = 0;
     $sid = 0;
+    if(exists $collector{$ptr_display}) {
+        my $hl = 2;
+        if($end_offset > 127) { for(my $l = $end_offset; $l > 0; $l >>= 8) { $hl++; } }
+        my $hint = "Indefinite length encoding, generate with: $openssl asn1parse -genconf <template> -offset $hl -noout -out <output>";
+        print "# $hint\n";
+        print STDERR "$hint\n";
+    }
     dump_template();
     return
 }

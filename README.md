@@ -217,7 +217,7 @@ Return codes:
 - ```0```: Success.
 - ```1```: Command line arguments error.
 - ```2```: Unparseable line encountered.
-- ```3```: Indefinite length encoding detected.
+- ```3```: Indefinite length encoding detected (template generated, see below).
 - ```4```: Unable to unwrap top-level SEQUENCE.
 
 ### Environment variables
@@ -301,8 +301,16 @@ This script was written many years ago as a quick and dirty PoC. It was then
 improved to support DER structures found in the wild (i.e. certificates).
 
 This tool has the same limitations as ```ASN1_generate_nconf(3)```:
- - it does not support indefinite length encoding since DER forbids it, regular
-   length encoding is used instead. EOC tags are preserved.
+ - DER forbids indefinite length encoding. When indefinite length encoding is
+   detected, the affected structures (and their ancestors) are rebuilt as
+   constructed OCTET STRINGs (```IMPLICIT:4U,SEQUENCE```) whose parts are
+   concatenated: the original header bytes (e.g. ```3080```), each child wrapped
+   with ```OCTWRAP``` and the EOC tags. The resulting top-level OCTET STRING
+   header is then skipped using the ```-offset``` option printed by the tool
+   (also written as a comment on the first line of the template): ```openssl
+   asn1parse -genconf <template> -offset <n> -noout -out <output>```.  Header
+   bytes of these structures are hardcoded, definite lengths of ancestors must be
+   adjusted manually if their content is edited.
  - it might produce a template that is not supported by ASN1_generate_nconf(3),
    this is the case with some CN encoded as PrintableString that contain
    forbidden characters such as ```*```, ```@```, ```&``` or ```_```

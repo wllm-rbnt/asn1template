@@ -11,6 +11,7 @@ wget --timeout=2 https://www.mail-archive.com/sqlite-users@mailinglists.sqlite.o
 for i in ./*p7s; do
     echo "${i} ... "
     ! ../../asn1template.pl "${i}" > "${i}.tpl"
-    openssl asn1parse -genconf "${i}.tpl" -out "${i}.tpl.der" > /dev/null 2>&1
-    ! diff "${i}" "${i}.tpl.der" > /dev/null 2>&1 && echo "ok" || echo "not ok"
+    offset=$(sed -n '1s/^#.* -offset \([0-9]*\) .*/-offset \1/p' "${i}.tpl")
+    openssl asn1parse -genconf "${i}.tpl" ${offset} -noout -out "${i}.tpl.der" > /dev/null 2>&1
+    diff "${i}" "${i}.tpl.der" > /dev/null 2>&1 && echo "ok" || echo "not ok"
 done

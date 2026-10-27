@@ -290,3 +290,43 @@ $ echo $?
 0
 ```
 
+## Example #6 - Indefinite Length Encoding
+
+```ASN1_generate_nconf(3)``` can only produce definite length encoding. Indefinite
+length encoded structures are therefore described as constructed OCTET STRINGs
+(```IMPLICIT:4U,SEQUENCE```) concatenating the original header bytes
+(e.g. ```3080```), the ```OCTWRAP```'ed children and the EOC tags:
+```console
+$ echo "MIACAQGggDADAgECAAAAAA==" | openssl base64 -d -out indefinite.der
+$ openssl asn1parse -in indefinite.der -i -inform D
+    0:d=0  hl=2 l=inf  cons: SEQUENCE
+    2:d=1  hl=2 l=   1 prim:  INTEGER           :01
+    5:d=1  hl=2 l=inf  cons:  cont [ 0 ]
+    7:d=2  hl=2 l=   3 cons:   SEQUENCE
+    9:d=3  hl=2 l=   1 prim:    INTEGER           :02
+   12:d=2  hl=2 l=   0 prim:   EOC
+   14:d=1  hl=2 l=   0 prim:  EOC
+$ ./asn1template.pl indefinite.der 2>/dev/null | tee indefinite.tpl
+# Indefinite length encoding, generate with: /usr/bin/openssl asn1parse -genconf <template> -offset 2 -noout -out <output>
+asn1 = IMPLICIT:4U,SEQUENCE:seq1@0-2-Inf
+[seq1@0-2-Inf]
+field2@0-header = FORMAT:HEX,OCTETSTRING:3080
+field3@2-2-1 = OCTWRAP,INTEGER:0x01
+field4@5-2-Inf = IMPLICIT:4U,SEQUENCE:seq2@5-2-Inf
+field5@14-2-0 = OCTWRAP,IMPLICIT:0U,PRINTABLESTRING:""
+[seq2@5-2-Inf]
+field6@5-header = FORMAT:HEX,OCTETSTRING:A080
+field7@7-2-3 = OCTWRAP,SEQUENCE:seq3@7-2-3
+field8@12-2-0 = OCTWRAP,IMPLICIT:0U,PRINTABLESTRING:""
+[seq3@7-2-3]
+field9@9-2-1 = INTEGER:0x02
+```
+
+The header of the generated top-level OCTET STRING is skipped using the
+```-offset``` value printed by the tool:
+```console
+$ openssl asn1parse -genconf indefinite.tpl -offset 2 -noout -out indefinite_new.ber
+$ diff indefinite.ber indefinite_new.ber
+$ echo $?
+0
+```
